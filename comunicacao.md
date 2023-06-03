@@ -67,7 +67,7 @@ informação que pretende-se transmitir com a mensagem.
 
 ### Ordem dos jogadores
 
-**Descrição:** Antes do início do jogo, o servidor envia para cada jogador uma mensagem dizendo qual dos dois jogadores (`username_do_primeiro_jogador`) é o primeiro a jogar.
+**Descrição:** Antes do início do jogo, o servidor envia para cada jogador uma mensagem dizendo qual dos dois jogadores é o primeiro e qual é o segundo a jogar.
 
 **De:** servidor
 
@@ -75,11 +75,14 @@ informação que pretende-se transmitir com a mensagem.
 
 **Resposta esperada:** nenhuma
 
+**Variáveis:** username_jogador_1 (string), username_jogador_2 (string)
+
 ```json
 {
-    "tipo": "jogador_inicial",
+    "tipo": "ordem_jogadores",
     "dados": {
-        "username": "username_do_primeiro_jogador"
+        "jogador_1": username_jogador_1,
+        "jogador_2": username_jogador_2
     }
 }
 ```
@@ -186,8 +189,8 @@ informação que pretende-se transmitir com a mensagem.
 {
     "tipo": "segunda_escolha_oponente",
     "dados": {
-        "coluna": i,
-        "linha": j,
+        "x": i,
+        "y": j,
         "valor": valor_da_carta
     }
 }
@@ -203,14 +206,14 @@ informação que pretende-se transmitir com a mensagem.
 
 **Resposta esperada:** nenhuma
 
-**Variáveis:** username (string), valor_da_carta (integer), acertou (boolean)
+**Variáveis:** username (string), nova_pontuacao (integer), acertou (boolean)
 
 ```json
 {
     "tipo": "resultado_jogada",
     "dados": {
-        "username": "username_do_jogador",
-        "valor": valor_da_carta,
+        "username": username,
+        "pontuacao": nova_pontuacao,
         "acertou": acertou
     }
 }
@@ -226,14 +229,16 @@ informação que pretende-se transmitir com a mensagem.
 
 **Resposta esperada:** nenhuma
 
-**Variáveis:** empate (boolean), vencedor (string)
+**Variáveis:** username_jogador_1 (string), username_jogador_2 (string), pontuacao1 (integer), pontuacao2 (integer)
 
 ```json
 {
     "tipo": "fim_do_jogo",
     "dados": {
-        "empate": empate,
-        "vencedor": "username_do_vencedor"
+        "pontuacao": {
+            username_jogador_1: pontuacao1,
+            username_jogador_2: pontuacao2
+        }
     }
 }
 ```
