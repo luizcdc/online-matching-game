@@ -1,8 +1,10 @@
 # A pygame program for an online matching game
+from time import sleep
 
 import pygame
 from game.constants import SCREEN_W, SCREEN_H, BOARD_POS, NUM_LINHAS, BRANCO, PRETO, CINZA, AZUL
 from game.board import Board
+from client import Client
 import os
 
 # inicializar pygame e a janela de jogo
@@ -11,6 +13,8 @@ janela = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("Jogo da Memória Multiplayer")
 mesa = Board()
 
+SERVER_IP = "127.0.0.1"
+SERVER_PORT = 5555
 
 def desenha_letreiro_superior(janela, message: str = ""):
     fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
@@ -52,18 +56,29 @@ frame_clock = pygame.time.Clock()
 
 def main():
     rodando = True
-    vez = 0
     escolha_1 = None
     escolha_2 = None
+    client = Client(SERVER_IP, SERVER_PORT)
+    while username := input("Digite seu nome de usuário para conectar-se ao servidor: "):
+
+        if client.registrar_username(username):
+            print(f"Conectado ao servidor como {username}.")
+            break
+        print("O nome de usuário já está sendo utilizado, tente outro.")
+        print()
+
     my_points = 0
     their_points = 0
     message = "Bom jogo!"
+    minha_vez, nome_oponente = client.receber_jogador_inicial()
+    print("O jogo irá começar! Quem joga primeiro é {}")
+    sleep(5)
     desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
     pygame.time.delay(1000)
     while rodando:
         frame_clock.tick(60)
         desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
-        if vez == 0:
+        if minha_vez :
             message = "Sua vez!"
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -88,27 +103,10 @@ def main():
                         pygame.time.delay(1000)
         elif vez == 1:
             message = "Vez do oponente!"
+            desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if not escolha_1:
-                        escolha = mesa.click(pygame.mouse.get_pos(), janela)
-                        if escolha:
-                            escolha_1 = escolha
-                    elif escolha_1 and not escolha_2:
-                        escolha = mesa.click(event.pos, janela)
-                        if escolha and escolha != escolha_1 and escolha not in mesa.acertos:
-                            escolha_2 = escolha
-                            if mesa.check((escolha_1, escolha_2)):
-                                their_points += 1
-                                pygame.display.update()
-                            else:
-                                vez = 0
-                                pygame.display.update()
-                            escolha_1 = None
-                            escolha_2 = None
-                        pygame.time.delay(1000)
 
         if len(mesa.acertos) == NUM_LINHAS ** 2:
             if my_points > their_points:
