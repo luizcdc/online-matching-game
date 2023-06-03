@@ -27,23 +27,30 @@ class Client:
         else:
             return False
 
-    def receber_jogador_inicial(self):
-        """Retorna True se o jogador desse cliente for o primeiro a jogar."""
+    def receber_jogador_inicial(self) -> tuple[bool, str]:
+        """Retorna um bool indicando se o jogador é o primeiro a jogar, e o nome do oponente."""
         primeiro = json.loads(self.conexao.recv(2048).decode("utf-8"))
-        if primeiro and primeiro['tipo'] == "jogador_inicial":
-            if primeiro["dados"]["username"] == self.username:
+        if primeiro and primeiro['tipo'] == "ordem_jogadores":
+            if primeiro["dados"]["jogador_1"] == self.username:
                 sou_primeiro = True
-                nome_oponente = primeiro["dados"]["oponente"]
+                nome_oponente = primeiro["dados"]["jogador_2"]
             else:
                 sou_primeiro = False
-                nome_oponente = primeiro["dados"]["username"]
+                nome_oponente = primeiro["dados"]["jogador_1"]
             return sou_primeiro, nome_oponente
 
         raise ValueError("O servidor enviou uma resposta de um tipo inesperado.")
-    def enviar_primeira_escolha(self, coord_x, coord_y):
+
+    def enviar_primeira_escolha(self, coord_x: int, coord_y: int) -> int:
+        """Envia a primeira escolha para o servidor
+
+        Retorna o seu valor, ou None se a escolha tiver sido inválida"""
         return self._enviar_escolha("primeira", coord_x, coord_y)
 
-    def enviar_segunda_escolha(self, coord_x, coord_y):
+    def enviar_segunda_escolha(self, coord_x: int, coord_y: int) -> int:
+        """Envia a segunda carta escolhida para o servidor
+
+        Retorna o seu valor, ou None se a escolha tiver sido inválida"""
         return self._enviar_escolha("segunda", coord_x, coord_y)
 
     def _enviar_escolha(self, num_escolha: str, coord_x, coord_y):

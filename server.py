@@ -112,9 +112,11 @@ def main():
 
     jogador_1, jogador_2 = list(jogadores_conectados.keys())
     jogadores_conectados[jogador_1].sendall(
-        str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
+        str.encode(json.dumps({"tipo": "ordem_jogadores", "dados": {"jogador_1": jogador_1,
+                                                                    "jogador_2": jogador_2}})))
     jogadores_conectados[jogador_2].sendall(
-        str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
+        str.encode(json.dumps({"tipo": "ordem_jogadores", "dados": {"jogador_1": jogador_1,
+                                                                    "jogador_2": jogador_2}})))
 
     board = ServerBoard()
     jogando = True
