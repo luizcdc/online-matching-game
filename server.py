@@ -4,18 +4,6 @@ from _thread import start_new_thread
 from game.board import ServerBoard
 from game.constants import NUM_LINHAS
 
-porta = 5555
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-try:
-    s.bind(('127.0.0.1', porta))
-except socket.error:
-    raise
-
-s.listen(2)
-
-jogadores_conectados = {}
-
 
 def thread_cliente(conexao):
     reply = ""
@@ -29,7 +17,9 @@ def thread_cliente(conexao):
                 return
             elif mensagem["tipo"] == "registrar_jogador":
                 username = mensagem["dados"]["username"]
+                print("Registrando jogador: " + username)
                 if username in jogadores_conectados:
+                    print(f"Jogador {username} já registrado.")
                     reply = json.dumps({"tipo": "jogador_registrado", "dados": {"registrado": False}})
                 else:
                     jogadores_conectados[username] = conexao
@@ -40,16 +30,6 @@ def thread_cliente(conexao):
         except Exception:
             print("Falha ao receber dados do cliente. Desconectado.")
             return
-
-
-for i in range(2):
-    conexao, endr = s.accept()
-    print("Conectado a:", endr)
-
-    start_new_thread(thread_cliente, tuple([conexao]))
-
-while len(jogadores_conectados) < 2:
-    pass
 
 
 def process_primeira_escolha(jogador, oponente, dados, board):
@@ -101,16 +81,41 @@ def process_segunda_escolha(jogador, oponente, dados, board, pontuacao) -> bool 
 
     return None
 
+
 primeira_escolha = None
 segunda_escolha = None
+jogadores_conectados = {}
 
-jogador_1, jogador_2 = list(jogadores_conectados.keys())
-jogadores_conectados[jogador_1].sendall(
-    str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
-jogadores_conectados[jogador_2].sendall(
-    str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
 
 def main():
+    global primeira_escolha, segunda_escolha
+
+    porta = 5555
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        s.bind(('127.0.0.1', porta))
+    except socket.error:
+        raise
+
+    s.listen(2)
+
+    for i in range(2):
+        print("Aguardando conexão...")
+        conexao, endr = s.accept()
+        print("Conectado a:", endr)
+
+        start_new_thread(thread_cliente, tuple([conexao]))
+
+    while len(jogadores_conectados) < 2:
+        pass
+
+    jogador_1, jogador_2 = list(jogadores_conectados.keys())
+    jogadores_conectados[jogador_1].sendall(
+        str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
+    jogadores_conectados[jogador_2].sendall(
+        str.encode(json.dumps({"tipo": "jogador_inicial", "dados": {"username": jogador_1}})))
+
     board = ServerBoard()
     jogando = True
     jogador_vez = jogador_1
@@ -129,17 +134,21 @@ def main():
                 oponente_vez, jogador_vez = jogador_vez, oponente_vez
                 primeira_escolha = None
                 segunda_escolha = None
+            elif acertou is True:
+                primeira_escolha = None
+                segunda_escolha = None
 
         if len(board.acertos) == NUM_LINHAS ** 2:
             fim_de_jogo = json.dumps({"tipo": "fim_do_jogo",
                                       "dados": {
                                           "pontuacao": {
-                                                jogador_1: pontuacao[jogador_1],
-                                                jogador_2: pontuacao[jogador_2]
+                                              jogador_1: pontuacao[jogador_1],
+                                              jogador_2: pontuacao[jogador_2]
                                           }
                                       }
                                       })
             jogando = False
+
 
 if __name__ == "__main__":
     main()
