@@ -131,9 +131,6 @@ def main():
                 segunda_escolha = None
 
         if len(board.acertos) == NUM_LINHAS ** 2:
-            empate = pontuacao[jogador_1] == pontuacao[jogador_2]
-            if not empate:
-                vencedor = jogador_1 if pontuacao[jogador_1] > pontuacao[jogador_2] else jogador_2
             fim_de_jogo = json.dumps({"tipo": "fim_do_jogo",
                                       "dados": {
                                           "pontuacao": {
