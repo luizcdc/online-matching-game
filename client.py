@@ -94,7 +94,7 @@ class Client:
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "carta_valida":
-                return reply
+                return reply["dados"]
         except queue.Empty:
             reply = None
 
@@ -106,7 +106,7 @@ class Client:
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "resultado_jogada":
-                return reply
+                return reply["dados"]
         except queue.Empty:
             reply = None
 
@@ -118,7 +118,7 @@ class Client:
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "primeira_escolha_oponente":
-                return reply
+                return reply["dados"]
         except queue.Empty:
             reply = None
 
@@ -130,7 +130,7 @@ class Client:
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "segunda_escolha_oponente":
-                return reply
+                return reply["dados"]
         except queue.Empty:
             reply = None
 
