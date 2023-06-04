@@ -1,11 +1,12 @@
 # A pygame program for an online matching game
+import queue
 from time import sleep
 
 import pygame
+from _thread import start_new_thread
 from game.constants import SCREEN_W, SCREEN_H, BOARD_POS, NUM_LINHAS, BRANCO, PRETO, CINZA, AZUL
 from game.board import Board
 from client import Client
-import os
 
 # inicializar pygame e a janela de jogo
 pygame.init()
@@ -15,6 +16,7 @@ mesa = Board()
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
+
 
 def desenha_letreiro_superior(janela, message: str = ""):
     fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
@@ -59,8 +61,9 @@ def main():
     escolha_1 = None
     escolha_2 = None
     client = Client(SERVER_IP, SERVER_PORT)
+    start_new_thread(client.thread_cliente, tuple())
     while username := input("Digite seu nome de usuário para conectar-se ao servidor: "):
-
+        print("Tentando registrar com username")
         if client.registrar_username(username):
             print(f"Conectado ao servidor como {username}.")
             break
@@ -70,15 +73,49 @@ def main():
     my_points = 0
     their_points = 0
     message = "Bom jogo!"
-    minha_vez, nome_oponente = client.receber_jogador_inicial()
-    print("O jogo irá começar! Quem joga primeiro é {}")
+    print(message)
+    while True:
+        reply_jogador_inicial = client.receber_jogador_inicial()
+        if reply_jogador_inicial is not None:
+            break
+    minha_vez, nome_oponente = reply_jogador_inicial
+    print(f"O jogo irá começar! Quem joga primeiro é {nome_oponente if minha_vez else username}")
     sleep(5)
     desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
     pygame.time.delay(1000)
+
     while rodando:
         frame_clock.tick(60)
+        if client.fim_de_jogo:
+            try:
+                fim_de_jogo = client.fila_recebidos.get_nowait()
+                if fim_de_jogo["tipo"] != "fim_do_jogo":
+                    continue
+                fim_de_jogo = fim_de_jogo["dados"]["pontuacao"]
+                my_points, their_points = fim_de_jogo[username], fim_de_jogo[nome_oponente]
+                if my_points > their_points:
+                    message = "Você venceu"
+                elif my_points < their_points:
+                    message = "Você perdeu"
+                else:
+                    message = "Empate"
+                message += " por desistência!" if their_points < 0 else "!"
+
+                desenhar_janela(
+                    janela,
+                    message,
+                    (escolha_1, escolha_2),
+                    (my_points, their_points if their_points >= 0 else 0)
+                )
+                # desenha_letreiro_superior(janela, message)  # TODO: ver se desenhar a janela inteira dá certo
+                pygame.display.update()
+                pygame.time.delay(5000)
+                rodando = False
+            except queue.Empty:
+                continue
+
         desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
-        if minha_vez :
+        if minha_vez:
             message = "Sua vez!"
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -96,29 +133,18 @@ def main():
                                 my_points += 1
                                 pygame.display.update()
                             else:
-                                vez = 1
+                                minha_vez = False
                             escolha_1 = None
                             escolha_2 = None
                         pygame.display.update()
                         pygame.time.delay(1000)
-        elif vez == 1:
+        elif not minha_vez:
             message = "Vez do oponente!"
             desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
 
-        if len(mesa.acertos) == NUM_LINHAS ** 2:
-            if my_points > their_points:
-                message = "Você venceu!"
-            elif my_points < their_points:
-                message = "Você perdeu!"
-            else:
-                message = "Empate!"
-            desenha_letreiro_superior(janela, message)
-            pygame.display.update()
-            pygame.time.delay(5000)
-            rodando = False
 
     pygame.quit()
 
