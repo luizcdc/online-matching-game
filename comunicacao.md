@@ -81,8 +81,8 @@ informação que pretende-se transmitir com a mensagem.
 {
     "tipo": "ordem_jogadores",
     "dados": {
-        "jogador_1": username_jogador_1,
-        "jogador_2": username_jogador_2
+        "1": username_jogador_1,
+        "2": username_jogador_2
     }
 }
 ```

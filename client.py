@@ -59,12 +59,12 @@ class Client:
         try:
             primeiro = self.fila_recebidos.get_nowait()
             if primeiro and primeiro['tipo'] == "ordem_jogadores":
-                if primeiro["dados"]["jogador_1"] == self.username:
+                if primeiro["dados"]["1"] == self.username:
                     sou_primeiro = True
-                    nome_oponente = primeiro["dados"]["jogador_2"]
+                    nome_oponente = primeiro["dados"]["2"]
                 else:
                     sou_primeiro = False
-                    nome_oponente = primeiro["dados"]["jogador_1"]
+                    nome_oponente = primeiro["dados"]["1"]
                 return sou_primeiro, nome_oponente
         except queue.Empty:
             primeiro = None

@@ -5,7 +5,7 @@ from game.board import ServerBoard
 from game.constants import NUM_LINHAS
 
 
-def thread_cliente(conexao):
+def thread_registra_cliente(conexao):
     reply = ""
     username = ""
     while True:
@@ -105,18 +105,19 @@ def main():
         conexao, endr = s.accept()
         print("Conectado a:", endr)
 
-        start_new_thread(thread_cliente, tuple([conexao]))
+        start_new_thread(thread_registra_cliente, tuple([conexao]))
 
     while len(jogadores_conectados) < 2:
         pass
 
     jogador_1, jogador_2 = list(jogadores_conectados.keys())
-    jogadores_conectados[jogador_1].sendall(
-        str.encode(json.dumps({"tipo": "ordem_jogadores", "dados": {"jogador_1": jogador_1,
-                                                                    "jogador_2": jogador_2}})))
-    jogadores_conectados[jogador_2].sendall(
-        str.encode(json.dumps({"tipo": "ordem_jogadores", "dados": {"jogador_1": jogador_1,
-                                                                    "jogador_2": jogador_2}})))
+    for jogador in jogadores_conectados:
+        jogadores_conectados[jogador].sendall(
+            str.encode(json.dumps({"tipo": "ordem_jogadores", "dados": {
+                "1": jogador_1,
+                "2": jogador_2
+            }}))
+        )
 
     board = ServerBoard()
     jogando = True
@@ -149,6 +150,8 @@ def main():
                                           }
                                       }
                                       })
+            jogadores_conectados[jogador_1].sendall(str.encode(fim_de_jogo))
+            jogadores_conectados[jogador_2].sendall(str.encode(fim_de_jogo))
             jogando = False
 
 
