@@ -10,7 +10,8 @@ from game.constants import NUM_LINHAS
 def thread_registra_cliente(conexao):
     reply = ""
     username = ""
-    while True:
+    registrado = False
+    while not registrado:
         try:
             mensagem = json.loads(conexao.recv(2048).decode("utf-8"))
 
@@ -30,6 +31,7 @@ def thread_registra_cliente(conexao):
                     reply = json.dumps(
                         {"tipo": "jogador_registrado", "dados": {"registrado": True}}
                     )
+                    registrado = True
             else:
                 reply = json.dumps(
                     {
@@ -38,7 +40,6 @@ def thread_registra_cliente(conexao):
                     }
                 )
             conexao.sendall(str.encode(reply + "\0"))
-            break
         except Exception:
             print("Falha ao receber dados do cliente. Desconectado.")
             return
