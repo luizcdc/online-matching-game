@@ -1,10 +1,10 @@
+import contextlib
 import json
 import socket
 import queue
 
 
 class Client:
-
     def __init__(self, server_ip: str, server_port: int):
         self.conexao = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_ip = server_ip
@@ -20,45 +20,50 @@ class Client:
         try:
             self.conexao.connect((self.server_ip, self.server_port))
         except socket.error as e:
-            print(f"Não foi possível conectar ao servidor {self.server_ip}:{self.server_port}.")
+            print(
+                f"Não foi possível conectar ao servidor {self.server_ip}:{self.server_port}."
+            )
             raise e
 
     def thread_cliente(self):
         """Thread que recebe e envia mensagens para o servidor."""
         while not self.fim_de_jogo:
-            try:
-                reply = json.loads(self.conexao.recv(2048).decode("utf-8"))
-                if reply:
-                    self.fila_recebidos.put(reply)
-                    if reply['tipo'] == "fim_do_jogo":
-                        self.fim_de_jogo = True
-                        break
-            except socket.timeout:
-                pass
+            with contextlib.suppress(socket.timeout):
+                if reply := self.conexao.recv(2048).decode("utf-8"):
+                    enqueued_messages = [
+                        json.loads(msg) for msg in reply.split("\0") if msg
+                    ]
+                    for msg in enqueued_messages:
+                        self.fila_recebidos.put(msg)
+                        if msg["tipo"] == "fim_do_jogo":
+                            self.fim_de_jogo = True
+                            break
             try:
                 msg = self.fila_enviar.get_nowait()
-                if msg:
-                    self.conexao.sendall(str.encode(json.dumps(msg)))
+                self.conexao.sendall(str.encode(json.dumps(msg)))
             except queue.Empty:
                 continue
 
     def registrar_username(self, username: str) -> bool:
         """Tenta registrar o username no servidor."""
         self.username = username
-        self.fila_enviar.put({"tipo": "registrar_jogador", "dados": {"username": self.username}})
+        self.fila_enviar.put(
+            {"tipo": "registrar_jogador", "dados": {"username": self.username}}
+        )
 
         reply = self.fila_recebidos.get(block=True, timeout=15)
 
-        if reply and reply['tipo'] == "jogador_registrado" and reply["dados"]["registrado"] is True:
-            return True
-        else:
-            return False
+        return bool(
+            reply
+            and reply["tipo"] == "jogador_registrado"
+            and reply["dados"]["registrado"] is True
+        )
 
     def receber_jogador_inicial(self) -> tuple[bool, str] | None:
         """Retorna um bool indicando a ordem dos jogadores e o nome do oponente."""
         try:
             primeiro = self.fila_recebidos.get_nowait()
-            if primeiro and primeiro['tipo'] == "ordem_jogadores":
+            if primeiro and primeiro["tipo"] == "ordem_jogadores":
                 if primeiro["dados"]["1"] == self.username:
                     sou_primeiro = True
                     nome_oponente = primeiro["dados"]["2"]
@@ -86,8 +91,12 @@ class Client:
         self._enviar_escolha("segunda", coord_x, coord_y)
 
     def _enviar_escolha(self, num_escolha: str, coord_x, coord_y):
-        self.fila_enviar.put({"tipo": f"{num_escolha}_escolha",
-                              "dados": {"coluna": coord_x, "linha": coord_y}})
+        self.fila_enviar.put(
+            {
+                "tipo": f"{num_escolha}_escolha",
+                "dados": {"coluna": coord_x, "linha": coord_y},
+            }
+        )
 
     def confirma_carta_valida(self):
         """Confirma que a carta escolhida foi aceita pelo servidor."""
@@ -140,7 +149,8 @@ class Client:
 
     def _requeue_caso_fim_do_jogo_else_raise(self, reply):
         if reply is not None:
-            if reply["tipo"] == "fim_do_jogo":
-                self.fila_recebidos.put(reply)
-            else:
+            if reply["tipo"] != "fim_do_jogo":
                 raise ValueError(f"Reply inesperado: {reply['tipo']}")
+
+            self.fila_recebidos.put(reply)
+            self.fim_de_jogo = True

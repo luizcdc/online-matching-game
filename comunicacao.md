@@ -8,7 +8,7 @@ atualizar o estado do jogo, tais como os formatos que essas mensagens devem segu
 ## Formato das mensagens
 
 O cliente e o servidor estão continuamente conectados através de um socket TCP. Através desse canal, mensagens são
-enviadas e recebidas utilizando o formato JSON.
+enviadas e recebidas utilizando o formato JSON, com um caractere 0x00 no final da mensagem para indicar o seu fim.
 
 Toda mensagem tem um campo "tipo" que sinaliza o tipo da mensagem, e um campo "dados" que é um dicionário contendo a 
 informação que pretende-se transmitir com a mensagem.
