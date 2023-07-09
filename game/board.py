@@ -76,7 +76,7 @@ class Card:
             )
             self.draw_numero(janela)
         elif escolhida:
-            pygame.draw.rect(janela, constants.AZUL, self.rect, 2, border_radius=10)
+            pygame.draw.rect(janela, constants.AZUL_FORTE, self.rect, 2, border_radius=10)
             self.draw_numero(janela)
         else:
             pygame.draw.rect(janela, constants.PRETO, self.rect, 2, border_radius=10)

@@ -11,9 +11,10 @@ from game.constants import (
     PRETO,
     CINZA,
     AZUL,
+    AZUL_CLARO,
 )
 from game.board import Card
-from client import Client
+from networking.client import Client
 from game.game import Game, GameState
 
 SERVER_IP = "127.0.0.1"
@@ -22,7 +23,7 @@ SERVER_PORT = 5555
 
 def desenha_letreiro_superior(janela, message: str = ""):
     fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
-    borda_superior = pygame.draw.rect(janela, PRETO, (10, 10, SCREEN_W - 20, 50), 3, border_radius=10)
+    borda_superior = pygame.draw.rect(janela, PRETO, (10, 10, SCREEN_W - 20, 50), 2, border_radius=10)
     if message:
         fonte = pygame.font.SysFont("comicsans", 30)
         texto = fonte.render(message, True, PRETO)
@@ -37,9 +38,7 @@ def desenha_letreiro_superior(janela, message: str = ""):
 
 def desenha_menu_inferior(janela, scores):
     fill_inferior = pygame.draw.rect(janela, AZUL, (0, SCREEN_H - 100, SCREEN_W, 100))
-    borda_inferior = pygame.draw.rect(janela, PRETO, (0, SCREEN_H - 100, SCREEN_W, 100), 3)
     fonte = pygame.font.SysFont("comicsans", 30)
-    # print score on left side
     score_me = fonte.render(f"Você: {str(scores[0])}", 1, PRETO)
     janela.blit(score_me, (10, fill_inferior.centery - score_me.get_height() // 2))
     score_them = fonte.render(f"Oponente: {str(scores[1])}", 1, PRETO)
@@ -53,7 +52,7 @@ def desenha_menu_inferior(janela, scores):
 
 
 def desenha_tabuleiro(janela, game):
-    area_tabuleiro = pygame.draw.rect(janela, CINZA, BOARD_POS, border_radius=10)
+    area_tabuleiro = pygame.draw.rect(janela, AZUL_CLARO, BOARD_POS, border_radius=10)
     game.board.draw(janela, game.escolhas_atuais)
 
 
