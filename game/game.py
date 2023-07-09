@@ -63,10 +63,11 @@ class Game:
         self.game_state = GameState.ESCOLHENDO_1
         self.resetar_jogada()
 
-    def pontuar(self, *, player: int):
+    def pontuar(self, *, player: int, new_points: int = None):
         """Pontua e permite que o jogador faça outra jogada"""
         assert player in {0, 1}
-        self.pontuacao[player] += 1
+        assert self.is_client is False or new_points is not None
+        self.pontuacao[player] = new_points if self.is_client else self.pontuacao[player] + 1
         self.escolhas_atuais[0].virada = self.escolhas_atuais[1].virada = True
         self.resetar_jogada()
 

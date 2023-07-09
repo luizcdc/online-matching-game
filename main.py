@@ -155,11 +155,17 @@ def main():
                 if event.type == pygame.QUIT:
                     rodando = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
+                    escolha_temp = processar_click_mouse(
+                        client, janela, game, escolha_temp, event
+                    )
             if game.game_state == GameState.VERIFICANDO_1:
-                escolha_temp, message = verifica_primeira_escolha_valida(client, game, escolha_temp, message)
+                escolha_temp, message = verifica_primeira_escolha_valida(
+                    client, game, escolha_temp, message
+                )
             elif game.game_state == GameState.VERIFICANDO_2:
-                escolha_temp, message = verifica_segunda_escolha_valida(client, game, escolha_temp, message)
+                escolha_temp, message = verifica_segunda_escolha_valida(
+                    client, game, escolha_temp, message
+                )
             elif game.game_state == GameState.AGUARDANDO_MEU_RESULTADO:
                 message = processar_resultado_rodada(client, game, message)
 
@@ -171,7 +177,9 @@ def main():
                 jogada_oponente = client.receber_primeira_escolha_oponente()
                 if jogada_oponente is not None:
                     game.escolhas_atuais.append(
-                        game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]]
+                        game.board.cards[jogada_oponente["coluna"]][
+                            jogada_oponente["linha"]
+                        ]
                     )
                     game.escolhas_atuais[0].numero = jogada_oponente["valor"]
                     game.game_state = GameState.OPONENTE_ESCOLHENDO_2
@@ -179,7 +187,9 @@ def main():
                 jogada_oponente = client.receber_segunda_escolha_oponente()
                 if jogada_oponente is not None:
                     game.escolhas_atuais.append(
-                        game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]]
+                        game.board.cards[jogada_oponente["coluna"]][
+                            jogada_oponente["linha"]
+                        ]
                     )
                     game.escolhas_atuais[1].numero = jogada_oponente["valor"]
                     game.game_state = GameState.AGUARDANDO_RESULTADO_OPONENTE
@@ -250,21 +260,24 @@ def processar_resultado_rodada(client: Client, game: Game, message: str):
     resultado = client.receber_resultado_jogada()
     if resultado is not None:
         if resultado["username"] == game.player_names[0]:
-            my_points = resultado["pontuacao"]
             if resultado["acertou"]:
                 message = "Você acertou! Jogue novamente!"
-                game.pontuar(player=0) # Já reseta a jogada
+                game.pontuar(
+                    player=0, new_points=resultado["pontuacao"]
+                )  # Já reseta a jogada
             else:
                 message = "Você errou! Vez do oponente!"
+                game.pontuacao[0] = resultado["pontuacao"]
                 game.iniciar_vez_oponente()
+        elif resultado["acertou"]:
+            game.pontuar(
+                player=1, new_points=resultado["pontuacao"]
+            )  # Já reseta a jogada
+            message = "O oponente acertou! Ele jogará novamente!"
         else:
-            their_points = resultado["pontuacao"]
-            if resultado["acertou"]:
-                game.pontuar(player=1) # Já reseta a jogada
-                message = "O oponente acertou! Ele jogará novamente!"
-            else:
-                message = "O oponente errou! Sua vez!"
-                game.iniciar_minha_vez()
+            message = "O oponente errou! Sua vez!"
+            game.pontuacao[1] = resultado["pontuacao"]
+            game.iniciar_minha_vez()
     return message
 
 
