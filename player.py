@@ -7,13 +7,12 @@ from game.constants import (
     SCREEN_W,
     SCREEN_H,
     BOARD_POS,
-    NUM_LINHAS,
     BRANCO,
     PRETO,
     CINZA,
     AZUL,
 )
-from game.board import Board, Card
+from game.board import Card
 from client import Client
 from game.game import Game, GameState
 
