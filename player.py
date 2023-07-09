@@ -158,7 +158,7 @@ def main():
     desenhar_janela(janela, message, game)
     pygame.time.delay(2000)
 
-    message = "Sua vez!" if game.minha_vez else "Vez do oponente!"
+    message = "Sua vez!" if game.minha_vez else f"Vez de {nome_oponente}!"
 
     escolha_temp = None
     while rodando:
@@ -213,13 +213,13 @@ def main():
                 if event.type == pygame.QUIT:
                     rodando = False
             if game.state == GameState.OPONENTE_ESCOLHENDO_1:
-                jogada_oponente = client.receber_primeira_escolha_oponente()
+                jogada_oponente = client.receber_escolha_1_oponente()
                 if jogada_oponente is not None:
                     game.escolhas.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas[0].numero = jogada_oponente["valor"]
                     game.state = GameState.OPONENTE_ESCOLHENDO_2
             elif game.state == GameState.OPONENTE_ESCOLHENDO_2:
-                jogada_oponente = client.receber_segunda_escolha_oponente()
+                jogada_oponente = client.receber_escolha_2_oponente()
                 if jogada_oponente is not None:
                     game.escolhas.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas[1].numero = jogada_oponente["valor"]
@@ -268,12 +268,12 @@ def processar_click_mouse(
     if not game.escolha_1_foi_feita() and game.state == GameState.ESCOLHENDO_1:
         escolha_temp = game.board.click(pygame.mouse.get_pos(), janela)
         if escolha_temp:
-            client.enviar_primeira_escolha(escolha_temp.x, escolha_temp.y)
+            client.enviar_escolha_1(escolha_temp.x, escolha_temp.y)
             game.state = GameState.VERIFICANDO_1
     elif game.escolha_1_foi_feita() and not game.escolha_2_foi_feita() and game.state == GameState.ESCOLHENDO_2:
         escolha_temp = game.board.click(event.pos, janela)
         if escolha_temp:
-            client.enviar_segunda_escolha(escolha_temp.x, escolha_temp.y)
+            client.enviar_escolha_2(escolha_temp.x, escolha_temp.y)
             game.state = GameState.VERIFICANDO_2
     return escolha_temp
 
@@ -287,14 +287,14 @@ def processar_resultado_rodada(client: Client, game: Game, message: str):
                 message = "Você acertou! Jogue novamente!"
                 game.pontuar(player=0, new_points=resultado["pontuacao"])  # Já reseta a jogada
             else:
-                message = "Você errou! Vez do oponente!"
+                message = f"Você errou! Vez de {game.player_names[1]}!"
                 game.pontuacao[0] = resultado["pontuacao"]
                 game.iniciar_vez_oponente()
         elif resultado["acertou"]:
             game.pontuar(player=1, new_points=resultado["pontuacao"])  # Já reseta a jogada
-            message = "O oponente acertou! Ele jogará novamente!"
+            message = f"{game.player_names[1]} acertou! Ele jogará novamente!"
         else:
-            message = "O oponente errou! Sua vez!"
+            message = f"{game.player_names[1]} errou! Sua vez!"
             game.pontuacao[1] = resultado["pontuacao"]
             game.iniciar_minha_vez()
     return message

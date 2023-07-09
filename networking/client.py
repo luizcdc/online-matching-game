@@ -68,13 +68,13 @@ class Client:
 
         return None
 
-    def enviar_primeira_escolha(self, coord_x: int, coord_y: int) -> int:
+    def enviar_escolha_1(self, coord_x: int, coord_y: int) -> int:
         """Envia a primeira escolha para o servidor
 
         Retorna o seu valor, ou None se a escolha tiver sido inválida"""
         self._enviar_escolha("primeira", coord_x, coord_y)
 
-    def enviar_segunda_escolha(self, coord_x: int, coord_y: int) -> int:
+    def enviar_escolha_2(self, coord_x: int, coord_y: int) -> int:
         """Envia a segunda carta escolhida para o servidor
 
         Retorna o seu valor, ou None se a escolha tiver sido inválida"""
@@ -113,7 +113,7 @@ class Client:
 
         return None
 
-    def receber_primeira_escolha_oponente(self):
+    def receber_escolha_1_oponente(self):
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "primeira_escolha_oponente":
@@ -125,7 +125,7 @@ class Client:
 
         return None
 
-    def receber_segunda_escolha_oponente(self):
+    def receber_escolha_2_oponente(self):
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "segunda_escolha_oponente":
