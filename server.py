@@ -1,5 +1,6 @@
 import json
 import socket
+import sys
 from _thread import start_new_thread
 from time import sleep
 
@@ -129,11 +130,17 @@ jogadores_conectados = {}
 def main():
     global primeira_escolha, segunda_escolha
 
-    porta = 5555
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if len(sys.argv) != 3:
+        porta = 5555
+        addr = "127.0.0.1"
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    else:
+        addr = sys.argv[1]
+        porta = int(sys.argv[2])
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
-        s.bind(("127.0.0.1", porta))
+        s.bind((addr, porta))
     except socket.error:
         raise
 

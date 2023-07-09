@@ -81,7 +81,7 @@ class Card:
             self.draw_numero(janela)
         else:
             pygame.draw.rect(janela, constants.PRETO, self.rect, 2, border_radius=10)
-            # self.draw_numero(janela, constants.CINZA)
+            # self.draw_numero(janela, constants.CINZA) # DEBUG
 
     def draw_numero(self, janela, color: tuple = constants.PRETO):
         numero_imprimir = fonte_numeros.render(str(self.numero), True, color)
