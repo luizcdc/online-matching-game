@@ -20,9 +20,7 @@ class Client:
         try:
             self.conexao.connect((self.server_ip, self.server_port))
         except socket.error as e:
-            print(
-                f"Não foi possível conectar ao servidor {self.server_ip}:{self.server_port}."
-            )
+            print(f"Não foi possível conectar ao servidor {self.server_ip}:{self.server_port}.")
             raise e
 
     def thread_cliente(self):
@@ -30,9 +28,7 @@ class Client:
         while not self.fim_de_jogo:
             with contextlib.suppress(socket.timeout):
                 if reply := self.conexao.recv(2048).decode("utf-8"):
-                    enqueued_messages = [
-                        json.loads(msg) for msg in reply.split("\0") if msg
-                    ]
+                    enqueued_messages = [json.loads(msg) for msg in reply.split("\0") if msg]
                     for msg in enqueued_messages:
                         self.fila_recebidos.put(msg)
                         if msg["tipo"] == "fim_do_jogo":
@@ -47,17 +43,11 @@ class Client:
     def registrar_username(self, username: str) -> bool:
         """Tenta registrar o username no servidor."""
         self.username = username
-        self.fila_enviar.put(
-            {"tipo": "registrar_jogador", "dados": {"username": self.username}}
-        )
+        self.fila_enviar.put({"tipo": "registrar_jogador", "dados": {"username": self.username}})
 
         reply = self.fila_recebidos.get(block=True, timeout=15)
 
-        return bool(
-            reply
-            and reply["tipo"] == "jogador_registrado"
-            and reply["dados"]["registrado"] is True
-        )
+        return bool(reply and reply["tipo"] == "jogador_registrado" and reply["dados"]["registrado"] is True)
 
     def receber_jogador_inicial(self) -> tuple[bool, str] | None:
         """Retorna um bool indicando a ordem dos jogadores e o nome do oponente."""

@@ -40,10 +40,7 @@ class ServerBoard:
 
     @staticmethod
     def coord_is_valida(coord):
-        return (
-            0 <= coord[0] < constants.NUM_LINHAS
-            and 0 <= coord[1] < constants.NUM_LINHAS
-        )
+        return 0 <= coord[0] < constants.NUM_LINHAS and 0 <= coord[1] < constants.NUM_LINHAS
 
 
 class ServerCard:
@@ -70,11 +67,13 @@ class Card:
     def draw(self, janela, escolhida: bool = False):
         pygame.draw.rect(janela, constants.BRANCO, self.rect, border_radius=10)
         if self.virada:
-            pygame.draw.rect(janela,
-                             constants.VERDE if self.player_1_virou else constants.LARANJA_CLARO,
-                             self.rect,
-                             2,
-                             border_radius=10)
+            pygame.draw.rect(
+                janela,
+                constants.VERDE if self.player_1_virou else constants.LARANJA_CLARO,
+                self.rect,
+                2,
+                border_radius=10,
+            )
             self.draw_numero(janela)
         elif escolhida:
             pygame.draw.rect(janela, constants.AZUL, self.rect, 2, border_radius=10)
@@ -102,9 +101,7 @@ class Board:
             self.cards.append([])
             for j in range(constants.NUM_LINHAS):
                 rect = pygame.Rect(
-                    100 + position[0] + j * (Card.size[0] + 10),
-                    25 + position[1] + i * (Card.size[1] + 10),
-                    *Card.size
+                    100 + position[0] + j * (Card.size[0] + 10), 25 + position[1] + i * (Card.size[1] + 10), *Card.size
                 )
                 self.cards[i].append(Card(rect, i, j))
 

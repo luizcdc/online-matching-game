@@ -24,14 +24,10 @@ def thread_registra_cliente(conexao):
                 print(f"Registrando jogador: {username}")
                 if username in jogadores_conectados:
                     print(f"Jogador {username} já registrado.")
-                    reply = json.dumps(
-                        {"tipo": "jogador_registrado", "dados": {"registrado": False}}
-                    )
+                    reply = json.dumps({"tipo": "jogador_registrado", "dados": {"registrado": False}})
                 else:
                     jogadores_conectados[username] = conexao
-                    reply = json.dumps(
-                        {"tipo": "jogador_registrado", "dados": {"registrado": True}}
-                    )
+                    reply = json.dumps({"tipo": "jogador_registrado", "dados": {"registrado": True}})
                     registrado = True
             else:
                 reply = json.dumps(
@@ -52,15 +48,9 @@ def process_primeira_escolha(jogador, oponente, dados, board):
     coord_x = dados["coluna"]
     coord_y = dados["linha"]
 
-    if (
-        primeira_escolha is None
-        and (escolha := board.get_card_by_pos(coord_x, coord_y))
-        and not escolha.virada
-    ):
+    if primeira_escolha is None and (escolha := board.get_card_by_pos(coord_x, coord_y)) and not escolha.virada:
         primeira_escolha = escolha
-        reply = json.dumps(
-            {"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}}
-        )
+        reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         reply_oponente = json.dumps(
             {
                 "tipo": "primeira_escolha_oponente",
@@ -88,9 +78,7 @@ def process_segunda_escolha(jogador, oponente, dados, board, pontuacao) -> bool 
     ):
         segunda_escolha = escolha
 
-        reply = json.dumps(
-            {"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}}
-        )
+        reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         jogadores_conectados[jogador].sendall(str.encode(reply + "\0"))
         reply_oponente = json.dumps(
             {
@@ -158,9 +146,7 @@ def main():
 
     sleep(2)
     jogador_1, jogador_2 = list(jogadores_conectados.keys())
-    msg = json.dumps(
-        {"tipo": "ordem_jogadores", "dados": {"1": jogador_1, "2": jogador_2}}
-    )
+    msg = json.dumps({"tipo": "ordem_jogadores", "dados": {"1": jogador_1, "2": jogador_2}})
     for jogador in jogadores_conectados:
         jogadores_conectados[jogador].sendall(str.encode(msg + "\0"))
 
@@ -170,17 +156,11 @@ def main():
     oponente_vez = jogador_2
     pontuacao = {jogador_1: 0, jogador_2: 0}
     while jogando:
-        mensagem = json.loads(
-            jogadores_conectados[jogador_vez].recv(2048).decode("utf-8")
-        )
+        mensagem = json.loads(jogadores_conectados[jogador_vez].recv(2048).decode("utf-8"))
         if mensagem["tipo"] == "primeira_escolha":
-            process_primeira_escolha(
-                jogador_vez, oponente_vez, mensagem["dados"], board
-            )
+            process_primeira_escolha(jogador_vez, oponente_vez, mensagem["dados"], board)
         elif mensagem["tipo"] == "segunda_escolha":
-            acertou = process_segunda_escolha(
-                jogador_vez, oponente_vez, mensagem["dados"], board, pontuacao
-            )
+            acertou = process_segunda_escolha(jogador_vez, oponente_vez, mensagem["dados"], board, pontuacao)
             if acertou is False:
                 oponente_vez, jogador_vez = jogador_vez, oponente_vez
                 primeira_escolha = None

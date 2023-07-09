@@ -21,12 +21,8 @@ SERVER_PORT = 5555
 
 
 def desenha_letreiro_superior(janela, message: str = ""):
-    fill_superior = pygame.draw.rect(
-        janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10
-    )
-    borda_superior = pygame.draw.rect(
-        janela, PRETO, (10, 10, SCREEN_W - 20, 50), 3, border_radius=10
-    )
+    fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
+    borda_superior = pygame.draw.rect(janela, PRETO, (10, 10, SCREEN_W - 20, 50), 3, border_radius=10)
     if message:
         fonte = pygame.font.SysFont("comicsans", 30)
         texto = fonte.render(message, True, PRETO)
@@ -41,9 +37,7 @@ def desenha_letreiro_superior(janela, message: str = ""):
 
 def desenha_menu_inferior(janela, scores):
     fill_inferior = pygame.draw.rect(janela, AZUL, (0, SCREEN_H - 100, SCREEN_W, 100))
-    borda_inferior = pygame.draw.rect(
-        janela, PRETO, (0, SCREEN_H - 100, SCREEN_W, 100), 3
-    )
+    borda_inferior = pygame.draw.rect(janela, PRETO, (0, SCREEN_H - 100, SCREEN_W, 100), 3)
     fonte = pygame.font.SysFont("comicsans", 30)
     # print score on left side
     score_me = fonte.render(f"Você: {str(scores[0])}", 1, PRETO)
@@ -79,9 +73,7 @@ def main():
     client = Client(SERVER_IP, SERVER_PORT)
     game = Game(client=True)
     start_new_thread(client.thread_cliente, ())
-    while username := input(
-        "Digite seu nome de usuário para conectar-se ao servidor: "
-    ):
+    while username := input("Digite seu nome de usuário para conectar-se ao servidor: "):
         print(f"Tentando registrar com username {username}")
         if client.registrar_username(username):
             print(f"Conectado ao servidor como {username}.")
@@ -93,9 +85,7 @@ def main():
     # inicializar pygame e a janela de jogo
     pygame.init()
     janela = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-    pygame.display.set_caption(
-        f"Jogo da Memória Multiplayer: conectado como {username}."
-    )
+    pygame.display.set_caption(f"Jogo da Memória Multiplayer: conectado como {username}.")
 
     print("Bom jogo!")
 
@@ -154,17 +144,11 @@ def main():
                 if event.type == pygame.QUIT:
                     rodando = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    escolha_temp = processar_click_mouse(
-                        client, janela, game, escolha_temp, event
-                    )
+                    escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
             if game.game_state == GameState.VERIFICANDO_1:
-                escolha_temp, message = verifica_primeira_escolha_valida(
-                    client, game, escolha_temp, message
-                )
+                escolha_temp, message = verifica_primeira_escolha_valida(client, game, escolha_temp, message)
             elif game.game_state == GameState.VERIFICANDO_2:
-                escolha_temp, message = verifica_segunda_escolha_valida(
-                    client, game, escolha_temp, message
-                )
+                escolha_temp, message = verifica_segunda_escolha_valida(client, game, escolha_temp, message)
             elif game.game_state == GameState.AGUARDANDO_MEU_RESULTADO:
                 message = processar_resultado_rodada(client, game, message)
 
@@ -175,21 +159,13 @@ def main():
             if game.game_state == GameState.OPONENTE_ESCOLHENDO_1:
                 jogada_oponente = client.receber_primeira_escolha_oponente()
                 if jogada_oponente is not None:
-                    game.escolhas_atuais.append(
-                        game.board.cards[jogada_oponente["coluna"]][
-                            jogada_oponente["linha"]
-                        ]
-                    )
+                    game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas_atuais[0].numero = jogada_oponente["valor"]
                     game.game_state = GameState.OPONENTE_ESCOLHENDO_2
             elif game.game_state == GameState.OPONENTE_ESCOLHENDO_2:
                 jogada_oponente = client.receber_segunda_escolha_oponente()
                 if jogada_oponente is not None:
-                    game.escolhas_atuais.append(
-                        game.board.cards[jogada_oponente["coluna"]][
-                            jogada_oponente["linha"]
-                        ]
-                    )
+                    game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas_atuais[1].numero = jogada_oponente["valor"]
                     game.game_state = GameState.AGUARDANDO_RESULTADO_OPONENTE
             elif game.game_state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
@@ -198,9 +174,7 @@ def main():
     pygame.quit()
 
 
-def verifica_segunda_escolha_valida(
-    client: Client, game: Game, escolha_temp: Card, message: str
-):
+def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Card, message: str):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -214,9 +188,7 @@ def verifica_segunda_escolha_valida(
     return escolha_temp, message
 
 
-def verifica_primeira_escolha_valida(
-    client: Client, game: Game, escolha_temp: Card, message: str
-):
+def verifica_primeira_escolha_valida(client: Client, game: Game, escolha_temp: Card, message: str):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -242,11 +214,7 @@ def processar_click_mouse(
         if escolha_temp:
             client.enviar_primeira_escolha(escolha_temp.x, escolha_temp.y)
             game.game_state = GameState.VERIFICANDO_1
-    elif (
-        game.escolha_1_foi_feita()
-        and not game.escolha_2_foi_feita()
-        and game.game_state == GameState.ESCOLHENDO_2
-    ):
+    elif game.escolha_1_foi_feita() and not game.escolha_2_foi_feita() and game.game_state == GameState.ESCOLHENDO_2:
         escolha_temp = game.board.click(event.pos, janela)
         if escolha_temp:
             client.enviar_segunda_escolha(escolha_temp.x, escolha_temp.y)
@@ -261,17 +229,13 @@ def processar_resultado_rodada(client: Client, game: Game, message: str):
         if resultado["username"] == game.player_names[0]:
             if resultado["acertou"]:
                 message = "Você acertou! Jogue novamente!"
-                game.pontuar(
-                    player=0, new_points=resultado["pontuacao"]
-                )  # Já reseta a jogada
+                game.pontuar(player=0, new_points=resultado["pontuacao"])  # Já reseta a jogada
             else:
                 message = "Você errou! Vez do oponente!"
                 game.pontuacao[0] = resultado["pontuacao"]
                 game.iniciar_vez_oponente()
         elif resultado["acertou"]:
-            game.pontuar(
-                player=1, new_points=resultado["pontuacao"]
-            )  # Já reseta a jogada
+            game.pontuar(player=1, new_points=resultado["pontuacao"])  # Já reseta a jogada
             message = "O oponente acertou! Ele jogará novamente!"
         else:
             message = "O oponente errou! Sua vez!"

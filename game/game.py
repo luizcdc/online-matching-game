@@ -22,9 +22,9 @@ class GameState(str, Enum):
     # O servidor está verificando se as cartas escolhidas pelo oponente são iguais
     AGUARDANDO_RESULTADO_OPONENTE = "aguardar_resultado_oponente"
 
-class Game:
 
-    def __init__(self, client = False):
+class Game:
+    def __init__(self, client=False):
         self.is_client = client
         self.player_names: list[str] = []
         self.pontuacao: list[int] = [0, 0]
