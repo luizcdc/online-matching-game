@@ -31,7 +31,7 @@ class Game:
         self.escolhas_atuais: list[Card] = []
         self.board = Board() if client else ServerBoard()
         self.minha_vez = False if client else None
-        self.game_state: Optional[GameState] = None
+        self.state = None
 
     def add_player(self, player_name: str):
         assert len(self.player_names) < 2, "Já existem dois jogadores"
@@ -47,20 +47,20 @@ class Game:
     def resetar_jogada(self):
         self.escolhas_atuais = []
         if self.is_client:
-            self.game_state = GameState.ESCOLHENDO_1 if self.minha_vez else GameState.OPONENTE_ESCOLHENDO_1
+            self.state = GameState.ESCOLHENDO_1 if self.minha_vez else GameState.OPONENTE_ESCOLHENDO_1
 
     def iniciar_vez_oponente(self):
         assert self.is_client
         assert self.minha_vez
         self.minha_vez = False
-        self.game_state = GameState.OPONENTE_ESCOLHENDO_1
+        self.state = GameState.OPONENTE_ESCOLHENDO_1
         self.resetar_jogada()
 
     def iniciar_minha_vez(self):
         assert self.is_client
         assert self.minha_vez is False
         self.minha_vez = True
-        self.game_state = GameState.ESCOLHENDO_1
+        self.state = GameState.ESCOLHENDO_1
         self.resetar_jogada()
 
     def pontuar(self, *, player: int, new_points: int = None):

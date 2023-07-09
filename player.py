@@ -145,30 +145,30 @@ def main():
                     rodando = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
-            if game.game_state == GameState.VERIFICANDO_1:
+            if game.state == GameState.VERIFICANDO_1:
                 escolha_temp, message = verifica_primeira_escolha_valida(client, game, escolha_temp, message)
-            elif game.game_state == GameState.VERIFICANDO_2:
+            elif game.state == GameState.VERIFICANDO_2:
                 escolha_temp, message = verifica_segunda_escolha_valida(client, game, escolha_temp, message)
-            elif game.game_state == GameState.AGUARDANDO_MEU_RESULTADO:
+            elif game.state == GameState.AGUARDANDO_MEU_RESULTADO:
                 message = processar_resultado_rodada(client, game, message)
 
         else:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
-            if game.game_state == GameState.OPONENTE_ESCOLHENDO_1:
+            if game.state == GameState.OPONENTE_ESCOLHENDO_1:
                 jogada_oponente = client.receber_primeira_escolha_oponente()
                 if jogada_oponente is not None:
                     game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas_atuais[0].numero = jogada_oponente["valor"]
-                    game.game_state = GameState.OPONENTE_ESCOLHENDO_2
-            elif game.game_state == GameState.OPONENTE_ESCOLHENDO_2:
+                    game.state = GameState.OPONENTE_ESCOLHENDO_2
+            elif game.state == GameState.OPONENTE_ESCOLHENDO_2:
                 jogada_oponente = client.receber_segunda_escolha_oponente()
                 if jogada_oponente is not None:
                     game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
                     game.escolhas_atuais[1].numero = jogada_oponente["valor"]
-                    game.game_state = GameState.AGUARDANDO_RESULTADO_OPONENTE
-            elif game.game_state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
+                    game.state = GameState.AGUARDANDO_RESULTADO_OPONENTE
+            elif game.state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
                 message = processar_resultado_rodada(client, game, message)
 
     pygame.quit()
@@ -180,9 +180,9 @@ def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Ca
         if confirmacao["valida"]:
             game.escolhas_atuais.append(escolha_temp)
             escolha_temp.numero = confirmacao["valor"]
-            game.game_state = GameState.AGUARDANDO_MEU_RESULTADO
+            game.state = GameState.AGUARDANDO_MEU_RESULTADO
         else:
-            game.game_state = GameState.ESCOLHENDO_2
+            game.state = GameState.ESCOLHENDO_2
             message = "Carta inválida! Escolha outra."
         escolha_temp = None
     return escolha_temp, message
@@ -194,7 +194,7 @@ def verifica_primeira_escolha_valida(client: Client, game: Game, escolha_temp: C
         if confirmacao["valida"]:
             game.escolhas_atuais.append(escolha_temp)
             escolha_temp.numero = confirmacao["valor"]
-            game.game_state = GameState.ESCOLHENDO_2
+            game.state = GameState.ESCOLHENDO_2
         else:
             game.resetar_jogada()
             message = "Carta inválida! Escolha outra."
@@ -209,16 +209,16 @@ def processar_click_mouse(
     escolha_temp: Card,
     event: pygame.event,
 ):
-    if not game.escolha_1_foi_feita() and game.game_state == GameState.ESCOLHENDO_1:
+    if not game.escolha_1_foi_feita() and game.state == GameState.ESCOLHENDO_1:
         escolha_temp = game.board.click(pygame.mouse.get_pos(), janela)
         if escolha_temp:
             client.enviar_primeira_escolha(escolha_temp.x, escolha_temp.y)
-            game.game_state = GameState.VERIFICANDO_1
-    elif game.escolha_1_foi_feita() and not game.escolha_2_foi_feita() and game.game_state == GameState.ESCOLHENDO_2:
+            game.state = GameState.VERIFICANDO_1
+    elif game.escolha_1_foi_feita() and not game.escolha_2_foi_feita() and game.state == GameState.ESCOLHENDO_2:
         escolha_temp = game.board.click(event.pos, janela)
         if escolha_temp:
             client.enviar_segunda_escolha(escolha_temp.x, escolha_temp.y)
-            game.game_state = GameState.VERIFICANDO_2
+            game.state = GameState.VERIFICANDO_2
     return escolha_temp
 
 
