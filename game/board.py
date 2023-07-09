@@ -64,7 +64,7 @@ class Card:
         self.x = x
         self.y = y
         self.virada = False
-        # Se o player 1 virou a carta, será colorida de verde, se foi o oponente, laranja claro
+        # Determina como a carta será colorida depois de revelada
         self.player_1_virou = False
 
     def draw(self, janela, escolhida: bool = False):
