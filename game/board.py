@@ -58,7 +58,7 @@ class Card:
         constants.BOARD_POS[2] // constants.NUM_LINHAS - 60,
     )
 
-    def __init__(self, rect: pygame.Rect, x, y, numero: int = 0):
+    def __init__(self, rect: pygame.Rect, x: int, y: int, numero: int = 0):
         self.numero = numero
         self.rect = rect
         self.x = x
