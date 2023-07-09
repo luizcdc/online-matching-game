@@ -1,5 +1,6 @@
 # A pygame program for an online matching game
 import queue
+from datetime import datetime
 
 import pygame
 from _thread import start_new_thread
@@ -9,7 +10,6 @@ from game.constants import (
     BOARD_POS,
     BRANCO,
     PRETO,
-    CINZA,
     AZUL,
     AZUL_CLARO,
 )
@@ -63,6 +63,40 @@ def desenhar_janela(janela, message: str, game: Game):
     desenha_menu_inferior(janela, tuple(game.pontuacao))
     pygame.display.update()
 
+def read_username(janela, mensagem):
+    username = ""
+    done_reading_username = False
+    while not done_reading_username:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                rodando = False
+                done_reading_username = True
+                break
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    done_reading_username = True
+                    break
+                elif event.key == pygame.K_BACKSPACE:
+                    username = username[:-1]
+                else:
+                    username += event.unicode
+        janela.fill(BRANCO)
+        desenha_letreiro_superior(janela, mensagem)
+        texto = pygame.font.SysFont("comicsans",
+                                    30).render(f"{username}{'_' if int(datetime.now().second) % 2 == 0 else ' '}",
+                                               True,
+                                               PRETO)
+        janela.blit(
+            texto,
+            (
+                SCREEN_W // 2 - texto.get_width() // 2,
+                SCREEN_H // 2 - texto.get_height() // 2,
+            ),
+        )
+        frame_clock.tick(60)
+        pygame.display.update()
+
+    return username
 
 frame_clock = pygame.time.Clock()
 
@@ -72,23 +106,46 @@ def main():
     client = Client(SERVER_IP, SERVER_PORT)
     game = Game(client=True)
     start_new_thread(client.thread_cliente, ())
-    while username := input("Digite seu nome de usuário para conectar-se ao servidor: "):
-        print(f"Tentando registrar com username {username}")
-        if client.registrar_username(username):
-            print(f"Conectado ao servidor como {username}.")
-            game.add_player(username)
-            break
-        print("O nome de usuário já está sendo utilizado, tente outro.")
-        print()
 
     # inicializar pygame e a janela de jogo
     pygame.init()
     janela = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+    pygame.display.set_caption("Jogo da Memória Multiplayer: tentando conectar-se ao servidor.")
+
+    username = ""
+    done_validating_username = False
+    mensagem = "Digite seu nome de usuário desejado:"
+    # Loop to get the username inside a textbox
+    while True:
+        username = read_username(janela, mensagem)
+        if client.registrar_username(username):
+            game.add_player(username)
+            break
+        mensagem = "O nome de usuário já está sendo utilizado, tente outro:"
+        pygame.time.delay(1000)
+
     pygame.display.set_caption(f"Jogo da Memória Multiplayer: conectado como {username}.")
 
     print("Bom jogo!")
 
+    t_s = datetime.now()
+    mensagem = "Nome de usuário aceito. Aguardando oponente."
     while True:
+        janela.fill(BRANCO)
+        desenha_letreiro_superior(janela, mensagem)
+        t = int((datetime.now() - t_s).seconds)
+        texto = pygame.font.SysFont("comicsans", 25).render(f"Já vai começar! Esperando há {t} segundos.",
+                                                            True,
+                                                            PRETO)
+        janela.blit(
+            texto,
+            (
+                SCREEN_W // 2 - texto.get_width() // 2,
+                SCREEN_H // 2 - texto.get_height() // 2,
+            ),
+        )
+        frame_clock.tick(60)
+        pygame.display.update()
         reply_jogador_inicial = client.receber_jogador_inicial()
         if reply_jogador_inicial is not None:
             break
