@@ -64,11 +64,17 @@ class Card:
         self.x = x
         self.y = y
         self.virada = False
+        # Se o player 1 virou a carta, será colorida de verde, se foi o oponente, laranja claro
+        self.player_1_virou = False
 
     def draw(self, janela, escolhida: bool = False):
         pygame.draw.rect(janela, constants.BRANCO, self.rect, border_radius=10)
         if self.virada:
-            pygame.draw.rect(janela, constants.VERDE, self.rect, 2, border_radius=10)
+            pygame.draw.rect(janela,
+                             constants.VERDE if self.player_1_virou else constants.LARANJA_CLARO,
+                             self.rect,
+                             2,
+                             border_radius=10)
             self.draw_numero(janela)
         elif escolhida:
             pygame.draw.rect(janela, constants.AZUL, self.rect, 2, border_radius=10)

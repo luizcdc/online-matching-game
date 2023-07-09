@@ -69,6 +69,7 @@ class Game:
         assert self.is_client is False or new_points is not None
         self.pontuacao[player] = new_points if self.is_client else self.pontuacao[player] + 1
         self.escolhas_atuais[0].virada = self.escolhas_atuais[1].virada = True
+        self.escolhas_atuais[0].player_1_virou = self.escolhas_atuais[1].player_1_virou = player == 0
         self.resetar_jogada()
 
     def escolha_1_foi_feita(self):
