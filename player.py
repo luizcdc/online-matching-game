@@ -53,7 +53,7 @@ def desenha_menu_inferior(janela, scores):
 
 def desenha_tabuleiro(janela, game):
     area_tabuleiro = pygame.draw.rect(janela, AZUL_CLARO, BOARD_POS, border_radius=10)
-    game.board.draw(janela, game.escolhas_atuais)
+    game.board.draw(janela, game.escolhas)
 
 
 def desenhar_janela(janela, message: str, game: Game):
@@ -215,14 +215,14 @@ def main():
             if game.state == GameState.OPONENTE_ESCOLHENDO_1:
                 jogada_oponente = client.receber_primeira_escolha_oponente()
                 if jogada_oponente is not None:
-                    game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
-                    game.escolhas_atuais[0].numero = jogada_oponente["valor"]
+                    game.escolhas.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
+                    game.escolhas[0].numero = jogada_oponente["valor"]
                     game.state = GameState.OPONENTE_ESCOLHENDO_2
             elif game.state == GameState.OPONENTE_ESCOLHENDO_2:
                 jogada_oponente = client.receber_segunda_escolha_oponente()
                 if jogada_oponente is not None:
-                    game.escolhas_atuais.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
-                    game.escolhas_atuais[1].numero = jogada_oponente["valor"]
+                    game.escolhas.append(game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]])
+                    game.escolhas[1].numero = jogada_oponente["valor"]
                     game.state = GameState.AGUARDANDO_RESULTADO_OPONENTE
             elif game.state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
                 message = processar_resultado_rodada(client, game, message)
@@ -234,7 +234,7 @@ def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Ca
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
-            game.escolhas_atuais.append(escolha_temp)
+            game.escolhas.append(escolha_temp)
             escolha_temp.numero = confirmacao["valor"]
             game.state = GameState.AGUARDANDO_MEU_RESULTADO
         else:
@@ -248,7 +248,7 @@ def verifica_primeira_escolha_valida(client: Client, game: Game, escolha_temp: C
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
-            game.escolhas_atuais.append(escolha_temp)
+            game.escolhas.append(escolha_temp)
             escolha_temp.numero = confirmacao["valor"]
             game.state = GameState.ESCOLHENDO_2
         else:

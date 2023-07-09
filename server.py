@@ -52,7 +52,7 @@ def process_primeira_escolha(jogador, oponente, dados, game: Game):
         and (escolha := game.board.get_card_by_pos(coord_x, coord_y))
         and not escolha.virada
     ):
-        game.escolhas_atuais.append(escolha)
+        game.escolhas.append(escolha)
         reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         reply_oponente = json.dumps(
             {
@@ -75,10 +75,10 @@ def process_segunda_escolha(jogador, oponente, dados, game: Game) -> bool | None
         game.escolha_1_foi_feita()
         and not game.escolha_2_foi_feita()
         and (escolha := game.board.get_card_by_pos(coord_x, coord_y))
-        and game.escolhas_atuais[0] is not escolha
+        and game.escolhas[0] is not escolha
         and not escolha.virada
     ):
-        game.escolhas_atuais.append(escolha)
+        game.escolhas.append(escolha)
 
         reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         jogadores_conectados[jogador].sendall(str.encode(reply + "\0"))
@@ -90,7 +90,7 @@ def process_segunda_escolha(jogador, oponente, dados, game: Game) -> bool | None
         )
         jogadores_conectados[oponente].sendall(str.encode(reply_oponente + "\0"))
 
-        acertou = game.board.check(game.escolhas_atuais)
+        acertou = game.board.check(game.escolhas)
         if acertou:
             game.pontuar(player=num_jogador)
         else:

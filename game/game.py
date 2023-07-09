@@ -28,7 +28,7 @@ class Game:
         self.is_client = client
         self.player_names: list[str] = []
         self.pontuacao: list[int] = [0, 0]
-        self.escolhas_atuais: list[Card] = []
+        self.escolhas: list[Card] = []
         self.board = Board() if client else ServerBoard()
         self.minha_vez = False if client else None
         self.state = None
@@ -45,7 +45,7 @@ class Game:
         self.resetar_jogada()
 
     def resetar_jogada(self):
-        self.escolhas_atuais = []
+        self.escolhas = []
         if self.is_client:
             self.state = GameState.ESCOLHENDO_1 if self.minha_vez else GameState.OPONENTE_ESCOLHENDO_1
 
@@ -68,12 +68,12 @@ class Game:
         assert player in {0, 1}
         assert self.is_client is False or new_points is not None
         self.pontuacao[player] = new_points if self.is_client else self.pontuacao[player] + 1
-        self.escolhas_atuais[0].virada = self.escolhas_atuais[1].virada = True
-        self.escolhas_atuais[0].player_1_virou = self.escolhas_atuais[1].player_1_virou = player == 0
+        self.escolhas[0].virada = self.escolhas[1].virada = True
+        self.escolhas[0].player_1_virou = self.escolhas[1].player_1_virou = player == 0
         self.resetar_jogada()
 
     def escolha_1_foi_feita(self):
-        return self.escolhas_atuais and len(self.escolhas_atuais) >= 1
+        return self.escolhas and len(self.escolhas) >= 1
 
     def escolha_2_foi_feita(self):
-        return self.escolhas_atuais and len(self.escolhas_atuais) == 2
+        return self.escolhas and len(self.escolhas) == 2
