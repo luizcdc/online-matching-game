@@ -73,7 +73,7 @@ class Game:
         self.resetar_jogada()
 
     def escolha_1_foi_feita(self):
-        return self.escolhas_atuais and len(self.escolhas_atuais) == 1
+        return self.escolhas_atuais and len(self.escolhas_atuais) >= 1
 
     def escolha_2_foi_feita(self):
         return self.escolhas_atuais and len(self.escolhas_atuais) == 2

@@ -6,6 +6,7 @@ from time import sleep
 
 from game.board import ServerBoard
 from game.constants import NUM_LINHAS
+from game.game import Game
 
 
 def thread_registra_cliente(conexao):
@@ -42,14 +43,16 @@ def thread_registra_cliente(conexao):
             return
 
 
-def process_primeira_escolha(jogador, oponente, dados, board):
-    global primeira_escolha
-
+def process_primeira_escolha(jogador, oponente, dados, game: Game):
     coord_x = dados["coluna"]
     coord_y = dados["linha"]
 
-    if primeira_escolha is None and (escolha := board.get_card_by_pos(coord_x, coord_y)) and not escolha.virada:
-        primeira_escolha = escolha
+    if (
+        not game.escolha_1_foi_feita()
+        and (escolha := game.board.get_card_by_pos(coord_x, coord_y))
+        and not escolha.virada
+    ):
+        game.escolhas_atuais.append(escolha)
         reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         reply_oponente = json.dumps(
             {
@@ -63,20 +66,19 @@ def process_primeira_escolha(jogador, oponente, dados, board):
     jogadores_conectados[jogador].sendall(str.encode(reply + "\0"))
 
 
-def process_segunda_escolha(jogador, oponente, dados, board, pontuacao) -> bool | None:
-    global primeira_escolha, segunda_escolha
-
+def process_segunda_escolha(jogador, oponente, dados, game: Game) -> bool | None:
+    num_jogador = game.player_names.index(jogador)
     coord_x = dados["coluna"]
     coord_y = dados["linha"]
 
     if (
-        primeira_escolha is not None
-        and segunda_escolha is None
-        and (escolha := board.get_card_by_pos(coord_x, coord_y))
-        and primeira_escolha is not escolha
+        game.escolha_1_foi_feita()
+        and not game.escolha_2_foi_feita()
+        and (escolha := game.board.get_card_by_pos(coord_x, coord_y))
+        and game.escolhas_atuais[0] is not escolha
         and not escolha.virada
     ):
-        segunda_escolha = escolha
+        game.escolhas_atuais.append(escolha)
 
         reply = json.dumps({"tipo": "carta_valida", "dados": {"valida": True, "valor": escolha.numero}})
         jogadores_conectados[jogador].sendall(str.encode(reply + "\0"))
@@ -88,14 +90,17 @@ def process_segunda_escolha(jogador, oponente, dados, board, pontuacao) -> bool 
         )
         jogadores_conectados[oponente].sendall(str.encode(reply_oponente + "\0"))
 
-        acertou = board.check((primeira_escolha, segunda_escolha))
-        pontuacao[jogador] += int(acertou)
+        acertou = game.board.check(game.escolhas_atuais)
+        if acertou:
+            game.pontuar(player=num_jogador)
+        else:
+            game.resetar_jogada()
         reply = json.dumps(
             {
                 "tipo": "resultado_jogada",
                 "dados": {
                     "username": jogador,
-                    "pontuacao": pontuacao[jogador],
+                    "pontuacao": game.pontuacao[num_jogador],
                     "acertou": acertou,
                 },
             }
@@ -110,22 +115,17 @@ def process_segunda_escolha(jogador, oponente, dados, board, pontuacao) -> bool 
     return None
 
 
-primeira_escolha = None
-segunda_escolha = None
 jogadores_conectados = {}
 
 
 def main():
-    global primeira_escolha, segunda_escolha
-
     if len(sys.argv) != 3:
         porta = 5555
         addr = "127.0.0.1"
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     else:
         addr = sys.argv[1]
         porta = int(sys.argv[2])
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         s.bind((addr, porta))
@@ -142,47 +142,41 @@ def main():
         start_new_thread(thread_registra_cliente, (conexao,))
 
     while len(jogadores_conectados) < 2:
-        pass
+        sleep(0.5)
 
-    sleep(2)
-    jogador_1, jogador_2 = list(jogadores_conectados.keys())
-    msg = json.dumps({"tipo": "ordem_jogadores", "dados": {"1": jogador_1, "2": jogador_2}})
+    sleep(1)
+    game = Game()
+    game.player_names = list(jogadores_conectados.keys())
+    msg = json.dumps({"tipo": "ordem_jogadores", "dados": {"1": game.player_names[0], "2": game.player_names[1]}})
     for jogador in jogadores_conectados:
         jogadores_conectados[jogador].sendall(str.encode(msg + "\0"))
 
-    board = ServerBoard()
     jogando = True
-    jogador_vez = jogador_1
-    oponente_vez = jogador_2
-    pontuacao = {jogador_1: 0, jogador_2: 0}
+    jogador_vez = game.player_names[0]
+    oponente_vez = game.player_names[1]
     while jogando:
         mensagem = json.loads(jogadores_conectados[jogador_vez].recv(2048).decode("utf-8"))
         if mensagem["tipo"] == "primeira_escolha":
-            process_primeira_escolha(jogador_vez, oponente_vez, mensagem["dados"], board)
+            process_primeira_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
         elif mensagem["tipo"] == "segunda_escolha":
-            acertou = process_segunda_escolha(jogador_vez, oponente_vez, mensagem["dados"], board, pontuacao)
+            acertou = process_segunda_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
             if acertou is False:
                 oponente_vez, jogador_vez = jogador_vez, oponente_vez
-                primeira_escolha = None
-                segunda_escolha = None
-            elif acertou is True:
-                primeira_escolha = None
-                segunda_escolha = None
 
-        if len(board.acertos) == NUM_LINHAS**2:
+        if len(game.board.acertos) == NUM_LINHAS**2:
             fim_de_jogo = json.dumps(
                 {
                     "tipo": "fim_do_jogo",
                     "dados": {
                         "pontuacao": {
-                            jogador_1: pontuacao[jogador_1],
-                            jogador_2: pontuacao[jogador_2],
+                            game.player_names[0]: game.pontuacao[0],
+                            game.player_names[1]: game.pontuacao[1],
                         }
                     },
                 }
             )
-            jogadores_conectados[jogador_1].sendall(str.encode(fim_de_jogo + "\0"))
-            jogadores_conectados[jogador_2].sendall(str.encode(fim_de_jogo + "\0"))
+            jogadores_conectados[game.player_names[0]].sendall(str.encode(fim_de_jogo + "\0"))
+            jogadores_conectados[game.player_names[1]].sendall(str.encode(fim_de_jogo + "\0"))
             jogando = False
 
 

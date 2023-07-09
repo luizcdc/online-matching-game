@@ -25,7 +25,7 @@ class ServerBoard:
             for j in range(constants.NUM_LINHAS):
                 self.cards[i][j].numero = options.pop()
 
-    def check(self, escolhas):
+    def check(self, escolhas: list["ServerCard"]):
         if escolhas[0].numero == escolhas[1].numero and escolhas[0] not in self.acertos:
             for i in range(constants.NUM_LINHAS):
                 for j in range(constants.NUM_LINHAS):
