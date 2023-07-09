@@ -13,11 +13,9 @@ from game.constants import (
     CINZA,
     AZUL,
 )
-from game.board import Board
+from game.board import Board, Card
 from client import Client
-
-
-mesa = Board()
+from game.game import Game, GameState
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
@@ -61,16 +59,16 @@ def desenha_menu_inferior(janela, scores):
     )
 
 
-def desenha_tabuleiro(janela, escolhas):
+def desenha_tabuleiro(janela, game):
     area_tabuleiro = pygame.draw.rect(janela, CINZA, BOARD_POS, border_radius=10)
-    mesa.draw(janela, escolhas)
+    game.board.draw(janela, game.escolhas_atuais)
 
 
-def desenhar_janela(janela, message: str, escolhas: tuple, scores: tuple):
+def desenhar_janela(janela, message: str, game: Game):
     janela.fill(BRANCO)
     desenha_letreiro_superior(janela, message)
-    desenha_tabuleiro(janela, escolhas)
-    desenha_menu_inferior(janela, scores)
+    desenha_tabuleiro(janela, game)
+    desenha_menu_inferior(janela, tuple(game.pontuacao))
     pygame.display.update()
 
 
@@ -79,19 +77,16 @@ frame_clock = pygame.time.Clock()
 
 def main():
     rodando = True
-    escolha_temp = None
-    escolha_1 = None
-    escolha_2 = None
     client = Client(SERVER_IP, SERVER_PORT)
+    game = Game(client=True)
     start_new_thread(client.thread_cliente, ())
-    estado_jogo = "registrando_username"
     while username := input(
         "Digite seu nome de usuário para conectar-se ao servidor: "
     ):
         print(f"Tentando registrar com username {username}")
         if client.registrar_username(username):
             print(f"Conectado ao servidor como {username}.")
-            estado_jogo = "esperando_oponente"
+            game.add_player(username)
             break
         print("O nome de usuário já está sendo utilizado, tente outro.")
         print()
@@ -103,23 +98,24 @@ def main():
         f"Jogo da Memória Multiplayer: conectado como {username}."
     )
 
-    my_points = 0
-    their_points = 0
     print("Bom jogo!")
 
     while True:
         reply_jogador_inicial = client.receber_jogador_inicial()
         if reply_jogador_inicial is not None:
             break
+
     minha_vez, nome_oponente = reply_jogador_inicial
+    game.add_player(nome_oponente)
+    game.start_game(eu_comeco=minha_vez)
 
     message = f"O jogo irá começar! Quem joga primeiro é {username if minha_vez else nome_oponente}"
-    desenhar_janela(janela, message, (escolha_1, escolha_2), (my_points, their_points))
+    desenhar_janela(janela, message, game)
     pygame.time.delay(2000)
 
-    estado_jogo = "escolher_primeira" if minha_vez else "oponente_escolhendo_primeira"
-    message = "Sua vez!" if minha_vez else "Vez do oponente!"
+    message = "Sua vez!" if game.minha_vez else "Vez do oponente!"
 
+    escolha_temp = None
     while rodando:
         frame_clock.tick(60)
         if client.fim_de_jogo:
@@ -128,25 +124,24 @@ def main():
                 if fim_de_jogo["tipo"] != "fim_do_jogo":
                     continue
                 fim_de_jogo = fim_de_jogo["dados"]["pontuacao"]
-                my_points, their_points = (
+                game.pontuacao = [
                     fim_de_jogo[username],
                     fim_de_jogo[nome_oponente],
-                )
-                if my_points > their_points:
+                ]
+                if game.pontuacao[0] > game.pontuacao[1]:
                     message = "Você venceu"
-                elif my_points < their_points:
+                elif game.pontuacao[0] < game.pontuacao[1]:
                     message = "Você perdeu"
                 else:
                     message = "Empate"
-                message += " por desistência!" if their_points < 0 else "!"
+                message += " por desistência!" if game.pontuacao[1] < 0 else "!"
 
+                game.pontuacao[1] = max(0, game.pontuacao[1])
                 desenhar_janela(
                     janela,
                     message,
-                    (escolha_1, escolha_2),
-                    (my_points, max(0, their_points)),
+                    game,
                 )
-                # desenha_letreiro_superior(janela, message)  # TODO: ver se desenhar a janela inteira dá certo
                 pygame.display.update()
                 pygame.time.delay(5000)
                 rodando = False
@@ -154,215 +149,123 @@ def main():
             except queue.Empty:
                 continue
 
-        desenhar_janela(
-            janela, message, (escolha_1, escolha_2), (my_points, their_points)
-        )
-        if minha_vez:
+        desenhar_janela(janela, message, game)
+        if game.minha_vez:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    (
-                        escolha_1,
-                        escolha_2,
-                        escolha_temp,
-                        estado_jogo,
-                        minha_vez,
-                        my_points,
-                    ) = processar_click_mouse(
-                        client,
-                        janela,
-                        escolha_1,
-                        escolha_2,
-                        escolha_temp,
-                        estado_jogo,
-                        event,
-                        minha_vez,
-                        my_points,
-                    )
-            if estado_jogo == "verificando_primeira":
-                (
-                    escolha_1,
-                    escolha_temp,
-                    estado_jogo,
-                    message,
-                ) = verifica_primeira_escolha_valida(
-                    client, escolha_1, escolha_temp, estado_jogo, message
-                )
-            elif estado_jogo == "verificando_segunda":
-                (
-                    escolha_2,
-                    escolha_temp,
-                    estado_jogo,
-                    message,
-                ) = verifica_segunda_escolha_valida(
-                    client, escolha_2, escolha_temp, estado_jogo, message
-                )
-            elif estado_jogo == "aguardar_resultado_minha_jogada":
-                (
-                    escolha_1,
-                    escolha_2,
-                    message,
-                    minha_vez,
-                    my_points,
-                    their_points,
-                    estado_jogo,
-                ) = processar_resultado_rodada(
-                    client,
-                    escolha_1,
-                    escolha_2,
-                    message,
-                    minha_vez,
-                    my_points,
-                    their_points,
-                    username,
-                    estado_jogo,
-                )
+                    escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
+            if game.game_state == GameState.VERIFICANDO_1:
+                escolha_temp, message = verifica_primeira_escolha_valida(client, game, escolha_temp, message)
+            elif game.game_state == GameState.VERIFICANDO_2:
+                escolha_temp, message = verifica_segunda_escolha_valida(client, game, escolha_temp, message)
+            elif game.game_state == GameState.AGUARDANDO_MEU_RESULTADO:
+                message = processar_resultado_rodada(client, game, message)
 
         else:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
-            if estado_jogo == "oponente_escolhendo_primeira":
+            if game.game_state == GameState.OPONENTE_ESCOLHENDO_1:
                 jogada_oponente = client.receber_primeira_escolha_oponente()
                 if jogada_oponente is not None:
-                    escolha_1 = mesa.cards[jogada_oponente["coluna"]][
-                        jogada_oponente["linha"]
-                    ]
-                    escolha_1.numero = jogada_oponente["valor"]
-                    estado_jogo = "oponente_escolhendo_segunda"
-            elif estado_jogo == "oponente_escolhendo_segunda":
+                    game.escolhas_atuais.append(
+                        game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]]
+                    )
+                    game.escolhas_atuais[0].numero = jogada_oponente["valor"]
+                    game.game_state = GameState.OPONENTE_ESCOLHENDO_2
+            elif game.game_state == GameState.OPONENTE_ESCOLHENDO_2:
                 jogada_oponente = client.receber_segunda_escolha_oponente()
                 if jogada_oponente is not None:
-                    escolha_2 = mesa.cards[jogada_oponente["coluna"]][
-                        jogada_oponente["linha"]
-                    ]
-                    escolha_2.numero = jogada_oponente["valor"]
-                    estado_jogo = "aguardar_resultado_oponente"
-            elif estado_jogo == "aguardar_resultado_oponente":
-                (
-                    escolha_1,
-                    escolha_2,
-                    message,
-                    minha_vez,
-                    my_points,
-                    their_points,
-                    estado_jogo,
-                ) = processar_resultado_rodada(
-                    client,
-                    escolha_1,
-                    escolha_2,
-                    message,
-                    minha_vez,
-                    my_points,
-                    their_points,
-                    username,
-                    estado_jogo,
-                )
+                    game.escolhas_atuais.append(
+                        game.board.cards[jogada_oponente["coluna"]][jogada_oponente["linha"]]
+                    )
+                    game.escolhas_atuais[1].numero = jogada_oponente["valor"]
+                    game.game_state = GameState.AGUARDANDO_RESULTADO_OPONENTE
+            elif game.game_state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
+                message = processar_resultado_rodada(client, game, message)
 
     pygame.quit()
 
 
 def verifica_segunda_escolha_valida(
-    client, escolha_2, escolha_temp, estado_jogo, message
+    client: Client, game: Game, escolha_temp: Card, message: str
 ):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
-            escolha_2 = escolha_temp
-            escolha_2.numero = confirmacao["valor"]
-            estado_jogo = "aguardar_resultado_minha_jogada"
+            game.escolhas_atuais.append(escolha_temp)
+            escolha_temp.numero = confirmacao["valor"]
+            game.game_state = GameState.AGUARDANDO_MEU_RESULTADO
         else:
-            estado_jogo = "escolher_segunda"
+            game.game_state = GameState.ESCOLHENDO_2
             message = "Carta inválida! Escolha outra."
         escolha_temp = None
-    return escolha_2, escolha_temp, estado_jogo, message
+    return escolha_temp, message
 
 
 def verifica_primeira_escolha_valida(
-    client, escolha_1, escolha_temp, estado_jogo, message
+    client: Client, game: Game, escolha_temp: Card, message: str
 ):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
-            escolha_1 = escolha_temp
-            escolha_1.numero = confirmacao["valor"]
-            estado_jogo = "escolher_segunda"
+            game.escolhas_atuais.append(escolha_temp)
+            escolha_temp.numero = confirmacao["valor"]
+            game.game_state = GameState.ESCOLHENDO_2
         else:
-            estado_jogo = "escolher_primeira"
+            game.resetar_jogada()
             message = "Carta inválida! Escolha outra."
         escolha_temp = None
-    return escolha_1, escolha_temp, estado_jogo, message
+    return escolha_temp, message
 
 
 def processar_click_mouse(
-    client,
-    janela,
-    escolha_1,
-    escolha_2,
-    escolha_temp,
-    estado_jogo,
-    event,
-    minha_vez,
-    my_points,
+    client: Client,
+    janela: pygame.display,
+    game: Game,
+    escolha_temp: Card,
+    event: pygame.event,
 ):
-    if not escolha_1 and estado_jogo == "escolher_primeira":
-        escolha_temp = mesa.click(pygame.mouse.get_pos(), janela)
+    if not game.escolha_1_foi_feita() and game.game_state == GameState.ESCOLHENDO_1:
+        escolha_temp = game.board.click(pygame.mouse.get_pos(), janela)
         if escolha_temp:
             client.enviar_primeira_escolha(escolha_temp.x, escolha_temp.y)
-            estado_jogo = "verificando_primeira"
-    elif escolha_1 and not escolha_2 and estado_jogo == "escolher_segunda":
-        escolha_temp = mesa.click(event.pos, janela)
+            game.game_state = GameState.VERIFICANDO_1
+    elif (
+        game.escolha_1_foi_feita()
+        and not game.escolha_2_foi_feita()
+        and game.game_state == GameState.ESCOLHENDO_2
+    ):
+        escolha_temp = game.board.click(event.pos, janela)
         if escolha_temp:
             client.enviar_segunda_escolha(escolha_temp.x, escolha_temp.y)
-            estado_jogo = "verificando_segunda"
-    return escolha_1, escolha_2, escolha_temp, estado_jogo, minha_vez, my_points
+            game.game_state = GameState.VERIFICANDO_2
+    return escolha_temp
 
 
-def processar_resultado_rodada(
-    client,
-    escolha_1,
-    escolha_2,
-    message,
-    minha_vez,
-    my_points,
-    their_points,
-    username,
-    estado_jogo,
-):
+def processar_resultado_rodada(client: Client, game: Game, message: str):
     pygame.time.delay(1000)
     resultado = client.receber_resultado_jogada()
     if resultado is not None:
-        if resultado["username"] == username:
+        if resultado["username"] == game.player_names[0]:
             my_points = resultado["pontuacao"]
             if resultado["acertou"]:
-                escolha_1.virada = escolha_2.virada = True
                 message = "Você acertou! Jogue novamente!"
-                estado_jogo = "escolher_primeira"
+                game.pontuar(player=0) # Já reseta a jogada
             else:
                 message = "Você errou! Vez do oponente!"
-                minha_vez = False
-                estado_jogo = "oponente_escolhendo_primeira"
+                game.iniciar_vez_oponente()
         else:
             their_points = resultado["pontuacao"]
             if resultado["acertou"]:
-                escolha_1.virada = escolha_2.virada = True
+                game.pontuar(player=1) # Já reseta a jogada
                 message = "O oponente acertou! Ele jogará novamente!"
-                estado_jogo = "oponente_escolhendo_primeira"
             else:
                 message = "O oponente errou! Sua vez!"
-                minha_vez = True
-                estado_jogo = "escolher_primeira"
-        escolha_1, escolha_2 = None, None
-    return (
-        escolha_1,
-        escolha_2,
-        message,
-        minha_vez,
-        my_points,
-        their_points,
-        estado_jogo,
-    )
+                game.iniciar_minha_vez()
+    return message
 
 
 if __name__ == "__main__":
