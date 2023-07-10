@@ -5,7 +5,6 @@ import sys
 from _thread import start_new_thread
 from time import sleep
 
-from game.board import ServerBoard
 from game.constants import NUM_LINHAS
 from game.game import Game
 

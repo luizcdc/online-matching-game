@@ -113,7 +113,6 @@ def main():
     pygame.display.set_caption("Jogo da Memória Multiplayer: tentando conectar-se ao servidor.")
 
     username = ""
-    done_validating_username = False
     mensagem = "Digite seu nome de usuário desejado:"
 
     try:
