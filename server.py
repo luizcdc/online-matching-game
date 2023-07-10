@@ -1,3 +1,4 @@
+import contextlib
 import json
 import socket
 import sys
@@ -154,31 +155,39 @@ def main():
     jogando = True
     jogador_vez = game.player_names[0]
     oponente_vez = game.player_names[1]
-    while jogando:
-        mensagem = json.loads(jogadores_conectados[jogador_vez].recv(2048).decode("utf-8"))
-        if mensagem["tipo"] == "primeira_escolha":
-            process_primeira_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
-        elif mensagem["tipo"] == "segunda_escolha":
-            acertou = process_segunda_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
-            if acertou is False:
-                oponente_vez, jogador_vez = jogador_vez, oponente_vez
+    try:
+        while jogando:
+            mensagem = json.loads(jogadores_conectados[jogador_vez].recv(2048).decode("utf-8"))
+            if mensagem["tipo"] == "primeira_escolha":
+                process_primeira_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
+            elif mensagem["tipo"] == "segunda_escolha":
+                acertou = process_segunda_escolha(jogador_vez, oponente_vez, mensagem["dados"], game)
+                if acertou is False:
+                    oponente_vez, jogador_vez = jogador_vez, oponente_vez
 
-        if len(game.board.acertos) == NUM_LINHAS**2:
-            sleep(3)
-            fim_de_jogo = json.dumps(
-                {
-                    "tipo": "fim_do_jogo",
-                    "dados": {
-                        "pontuacao": {
-                            game.player_names[0]: game.pontuacao[0],
-                            game.player_names[1]: game.pontuacao[1],
-                        }
-                    },
-                }
-            )
-            jogadores_conectados[game.player_names[0]].sendall(str.encode(fim_de_jogo + "\0"))
-            jogadores_conectados[game.player_names[1]].sendall(str.encode(fim_de_jogo + "\0"))
-            jogando = False
+            if len(game.board.acertos) == NUM_LINHAS**2:
+                sleep(3)
+                fim_de_jogo = json.dumps(
+                    {
+                        "tipo": "fim_do_jogo",
+                        "dados": {
+                            "pontuacao": {
+                                game.player_names[0]: game.pontuacao[0],
+                                game.player_names[1]: game.pontuacao[1],
+                            }
+                        },
+                    }
+                )
+                jogadores_conectados[game.player_names[0]].sendall(str.encode(fim_de_jogo + "\0"))
+                jogadores_conectados[game.player_names[1]].sendall(str.encode(fim_de_jogo + "\0"))
+                jogando = False
+    except ConnectionResetError:
+        disconnected_message = json.dumps({"tipo": "oponente_desistiu"})
+        with contextlib.suppress(ConnectionResetError):
+            jogadores_conectados[oponente_vez].sendall(str.encode(disconnected_message + "\0"))
+        with contextlib.suppress(ConnectionResetError):
+            jogadores_conectados[jogador_vez].sendall(str.encode(disconnected_message + "\0"))
+
 
 
 if __name__ == "__main__":

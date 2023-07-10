@@ -31,7 +31,7 @@ class Client:
                     enqueued_messages = [json.loads(msg) for msg in reply.split("\0") if msg]
                     for msg in enqueued_messages:
                         self.fila_recebidos.put(msg)
-                        if msg["tipo"] == "fim_do_jogo":
+                        if msg["tipo"] in ["fim_do_jogo", "oponente_desistiu"]:
                             self.fim_de_jogo = True
                             break
             try:
@@ -139,7 +139,7 @@ class Client:
 
     def _requeue_caso_fim_do_jogo_else_raise(self, reply):
         if reply is not None:
-            if reply["tipo"] != "fim_do_jogo":
+            if reply["tipo"] not in ["fim_do_jogo", "oponente_desistiu"]:
                 raise ValueError(f"Reply inesperado: {reply['tipo']}")
 
             self.fila_recebidos.put(reply)

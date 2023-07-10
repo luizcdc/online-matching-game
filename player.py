@@ -170,14 +170,20 @@ def main():
         frame_clock.tick(60)
         if client.fim_de_jogo:
             try:
-                fim_de_jogo = client.fila_recebidos.get_nowait()
-                if fim_de_jogo["tipo"] != "fim_do_jogo":
+                final_message = client.fila_recebidos.get_nowait()
+                if final_message["tipo"] == "fim_de_jogo":
+                    fim_de_jogo = final_message["dados"]["pontuacao"]
+                    game.pontuacao = [
+                        fim_de_jogo[username],
+                        fim_de_jogo[nome_oponente],
+                    ]
+                elif final_message["tipo"] == "oponente_desistiu":
+                    oponente_desistiu = final_message
+                    game.pontuacao[1] = -1
+                else:
                     continue
-                fim_de_jogo = fim_de_jogo["dados"]["pontuacao"]
-                game.pontuacao = [
-                    fim_de_jogo[username],
-                    fim_de_jogo[nome_oponente],
-                ]
+
+
                 if game.pontuacao[0] > game.pontuacao[1]:
                     message = "Você venceu"
                 elif game.pontuacao[0] < game.pontuacao[1]:
@@ -200,6 +206,8 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
+                    pygame.quit()
+                    exit(0)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
             if game.state == GameState.VERIFICANDO_1:
@@ -213,6 +221,8 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     rodando = False
+                    pygame.quit()
+                    exit(0)
             if game.state == GameState.OPONENTE_ESCOLHENDO_1:
                 jogada_oponente = client.receber_escolha_1_oponente()
                 if jogada_oponente is not None:
