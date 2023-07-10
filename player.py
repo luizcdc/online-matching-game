@@ -171,14 +171,13 @@ def main():
         if client.fim_de_jogo:
             try:
                 final_message = client.fila_recebidos.get_nowait()
-                if final_message["tipo"] == "fim_de_jogo":
+                if final_message["tipo"] == "fim_do_jogo":
                     fim_de_jogo = final_message["dados"]["pontuacao"]
                     game.pontuacao = [
                         fim_de_jogo[username],
                         fim_de_jogo[nome_oponente],
                     ]
                 elif final_message["tipo"] == "oponente_desistiu":
-                    oponente_desistiu = final_message
                     game.pontuacao[1] = -1
                 else:
                     continue

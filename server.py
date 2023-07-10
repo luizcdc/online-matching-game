@@ -179,13 +179,21 @@ def main():
                 )
                 jogadores_conectados[game.player_names[0]].sendall(str.encode(fim_de_jogo + "\0"))
                 jogadores_conectados[game.player_names[1]].sendall(str.encode(fim_de_jogo + "\0"))
+                jogadores_conectados[game.player_names[0]].close()
+                jogadores_conectados[game.player_names[1]].close()
+                print("Finalizado com sucesso")
                 jogando = False
-    except ConnectionResetError:
+    except ConnectionError:
         disconnected_message = json.dumps({"tipo": "oponente_desistiu"})
-        with contextlib.suppress(ConnectionResetError):
+        with contextlib.suppress(ConnectionError):
             jogadores_conectados[oponente_vez].sendall(str.encode(disconnected_message + "\0"))
-        with contextlib.suppress(ConnectionResetError):
+            jogadores_conectados[oponente_vez].close()
+        with contextlib.suppress(ConnectionError):
             jogadores_conectados[jogador_vez].sendall(str.encode(disconnected_message + "\0"))
+            jogadores_conectados[oponente_vez].close()
+
+    s.close()
+
 
 
 
