@@ -71,7 +71,7 @@ def read_username(janela, mensagem):
             if event.type == pygame.QUIT:
                 rodando = False
                 done_reading_username = True
-                break
+                raise KeyboardInterrupt
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     done_reading_username = True
@@ -115,14 +115,19 @@ def main():
     username = ""
     done_validating_username = False
     mensagem = "Digite seu nome de usuário desejado:"
-    # Loop to get the username inside a textbox
-    while True:
-        username = read_username(janela, mensagem)
-        if client.registrar_username(username):
-            game.add_player(username)
-            break
-        mensagem = "O nome de usuário já está sendo utilizado, tente outro:"
-        pygame.time.delay(1000)
+
+    try:
+        while True:
+            username = read_username(janela, mensagem)
+            if client.registrar_username(username):
+                game.add_player(username)
+                break
+            mensagem = "O nome de usuário já está sendo utilizado, tente outro:"
+            pygame.time.delay(1000)
+    except KeyboardInterrupt:
+        print("Saindo do jogo...")
+        pygame.quit()
+        return
 
     pygame.display.set_caption(f"Jogo da Memória Multiplayer: conectado como {username}.")
 
