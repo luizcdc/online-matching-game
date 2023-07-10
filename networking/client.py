@@ -33,6 +33,7 @@ class Client:
                         self.fila_recebidos.put(msg)
                         if msg["tipo"] in ["fim_do_jogo", "oponente_desistiu"]:
                             self.fim_de_jogo = True
+                            self.conexao.close()
                             break
             try:
                 msg = self.fila_enviar.get_nowait()
