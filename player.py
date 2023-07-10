@@ -182,11 +182,7 @@ def main():
                 message += " por desistência!" if game.pontuacao[1] < 0 else "!"
 
                 game.pontuacao[1] = max(0, game.pontuacao[1])
-                desenhar_janela(
-                    janela,
-                    message,
-                    game,
-                )
+                desenhar_janela(janela, message, game)
                 pygame.display.update()
                 pygame.time.delay(5000)
                 rodando = False
@@ -227,7 +223,10 @@ def main():
             elif game.state == GameState.AGUARDANDO_RESULTADO_OPONENTE:
                 message = processar_resultado_rodada(client, game, message)
 
-    pygame.quit()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
 
 
 def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Card, message: str):

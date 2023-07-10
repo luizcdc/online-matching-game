@@ -164,6 +164,7 @@ def main():
                 oponente_vez, jogador_vez = jogador_vez, oponente_vez
 
         if len(game.board.acertos) == NUM_LINHAS**2:
+            sleep(3)
             fim_de_jogo = json.dumps(
                 {
                     "tipo": "fim_do_jogo",
