@@ -243,3 +243,18 @@ informação que pretende-se transmitir com a mensagem.
 }
 ```
 
+### Desistência
+
+**Descrição:** O servidor envia para o cliente ainda conectado uma mensagem indicando que o outro jogador desistiu.
+
+**De:** servidor
+
+**Para:** cliente
+
+**Resposta esperada:** nenhuma
+
+```json
+{
+    "tipo": "oponente_desistiu",
+}
+```
