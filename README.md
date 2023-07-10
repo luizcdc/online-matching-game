@@ -1,5 +1,7 @@
 # online-matching-game
 
+Jogo da memória multiplayer desenvolvido para a disciplina de Sistemas Distribuídos do curso de Ciência da Computação da Universidade Federal da Bahia.
+
 Requer Python 3.10. Para executar, primeiro instalar a dependência pygame através do seguinte comando:
 
 ```bash
