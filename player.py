@@ -3,6 +3,7 @@ import queue
 from datetime import datetime
 
 import pygame
+from pygame.surface import Surface
 from _thread import start_new_thread
 from game.constants import (
     SCREEN_W,
@@ -21,7 +22,7 @@ SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
 
 
-def desenha_letreiro_superior(janela, message: str = ""):
+def desenha_letreiro_superior(janela: Surface, message: str = ""):
     fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
     borda_superior = pygame.draw.rect(janela, PRETO, (10, 10, SCREEN_W - 20, 50), 2, border_radius=10)
     if message:
@@ -36,7 +37,7 @@ def desenha_letreiro_superior(janela, message: str = ""):
         )
 
 
-def desenha_menu_inferior(janela, scores):
+def desenha_menu_inferior(janela: Surface, scores: list[int]):
     fill_inferior = pygame.draw.rect(janela, AZUL, (0, SCREEN_H - 100, SCREEN_W, 100))
     fonte = pygame.font.SysFont("comicsans", 30)
     score_me = fonte.render(f"Você: {str(scores[0])}", 1, PRETO)
@@ -51,19 +52,19 @@ def desenha_menu_inferior(janela, scores):
     )
 
 
-def desenha_tabuleiro(janela, game):
+def desenha_tabuleiro(janela: Surface, game: Game):
     area_tabuleiro = pygame.draw.rect(janela, AZUL_CLARO, BOARD_POS, border_radius=10)
     game.board.draw(janela, game.escolhas)
 
 
-def desenhar_janela(janela, message: str, game: Game):
+def desenhar_janela(janela: Surface, message: str, game: Game):
     janela.fill(BRANCO)
     desenha_letreiro_superior(janela, message)
     desenha_tabuleiro(janela, game)
     desenha_menu_inferior(janela, tuple(game.pontuacao))
     pygame.display.update()
 
-def read_username(janela, mensagem):
+def read_username(janela: Surface, mensagem: str):
     username = ""
     done_reading_username = False
     while not done_reading_username:

@@ -43,7 +43,7 @@ def thread_registra_cliente(conexao):
             return
 
 
-def process_primeira_escolha(jogador, oponente, dados, game: Game):
+def process_primeira_escolha(jogador: str, oponente: str, dados: dict, game: Game):
     coord_x = dados["coluna"]
     coord_y = dados["linha"]
 
@@ -66,7 +66,7 @@ def process_primeira_escolha(jogador, oponente, dados, game: Game):
     jogadores_conectados[jogador].sendall(str.encode(reply + "\0"))
 
 
-def process_segunda_escolha(jogador, oponente, dados, game: Game) -> bool | None:
+def process_segunda_escolha(jogador: str, oponente: str, dados: dict, game: Game) -> bool | None:
     num_jogador = game.player_names.index(jogador)
     coord_x = dados["coluna"]
     coord_y = dados["linha"]

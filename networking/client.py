@@ -80,7 +80,7 @@ class Client:
         Retorna o seu valor, ou None se a escolha tiver sido inválida"""
         self._enviar_escolha("segunda", coord_x, coord_y)
 
-    def _enviar_escolha(self, num_escolha: str, coord_x, coord_y):
+    def _enviar_escolha(self, num_escolha: str, coord_x: int, coord_y: int):
         self.fila_enviar.put(
             {
                 "tipo": f"{num_escolha}_escolha",
@@ -137,7 +137,7 @@ class Client:
 
         return None
 
-    def _requeue_caso_fim_do_jogo_else_raise(self, reply):
+    def _requeue_caso_fim_do_jogo_else_raise(self, reply: dict | None):
         if reply is not None:
             if reply["tipo"] not in ["fim_do_jogo", "oponente_desistiu"]:
                 raise ValueError(f"Reply inesperado: {reply['tipo']}")
