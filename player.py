@@ -23,6 +23,7 @@ SERVER_PORT = 5555
 
 
 def desenha_letreiro_superior(janela: Surface, message: str = ""):
+    """Desenha o letreiro superior do jogo."""
     fill_superior = pygame.draw.rect(janela, AZUL, (10, 10, SCREEN_W - 20, 50), border_radius=10)
     borda_superior = pygame.draw.rect(janela, PRETO, (10, 10, SCREEN_W - 20, 50), 2, border_radius=10)
     if message:
@@ -38,6 +39,7 @@ def desenha_letreiro_superior(janela: Surface, message: str = ""):
 
 
 def desenha_menu_inferior(janela: Surface, scores: list[int]):
+    """Desenha o menu inferior do jogo."""
     fill_inferior = pygame.draw.rect(janela, AZUL, (0, SCREEN_H - 100, SCREEN_W, 100))
     fonte = pygame.font.SysFont("comicsans", 30)
     score_me = fonte.render(f"Você: {str(scores[0])}", 1, PRETO)
@@ -53,11 +55,13 @@ def desenha_menu_inferior(janela: Surface, scores: list[int]):
 
 
 def desenha_tabuleiro(janela: Surface, game: Game):
+    """Desenha o tabuleiro do jogo."""
     area_tabuleiro = pygame.draw.rect(janela, AZUL_CLARO, BOARD_POS, border_radius=10)
     game.board.draw(janela, game.escolhas)
 
 
 def desenhar_janela(janela: Surface, message: str, game: Game):
+    """Desenha a janela do jogo."""
     janela.fill(BRANCO)
     desenha_letreiro_superior(janela, message)
     desenha_tabuleiro(janela, game)
@@ -65,6 +69,7 @@ def desenhar_janela(janela: Surface, message: str, game: Game):
     pygame.display.update()
 
 def read_username(janela: Surface, mensagem: str):
+    """Lê o nome de usuário que o jogador digitará e retorna-o."""
     username = ""
     done_reading_username = False
     while not done_reading_username:
@@ -243,6 +248,7 @@ def main():
 
 
 def verifica_escolha_2_valida(client: Client, game: Game, escolha_temp: Card, message: str):
+    """Verifica se o servidor confirmou a escolha 2 e trata essa resposta"""
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -257,6 +263,7 @@ def verifica_escolha_2_valida(client: Client, game: Game, escolha_temp: Card, me
 
 
 def verifica_escolha_1_valida(client: Client, game: Game, escolha_temp: Card, message: str):
+    """Verifica se o servidor confirmou a escolha 1 e trata essa resposta"""
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -277,6 +284,7 @@ def processar_click(
     escolha_temp: Card,
     event: pygame.event,
 ):
+    """Tratamento para click na inteface"""
     if not game.escolha_1_foi_feita() and game.state == GameState.ESCOLHENDO_1:
         escolha_temp = game.board.click(pygame.mouse.get_pos(), janela)
         if escolha_temp:
@@ -291,6 +299,7 @@ def processar_click(
 
 
 def processar_resultado_rodada(client: Client, game: Game, message: str):
+    """Processa o resultado da rodada e retorna a mensagem que o explica"""
     pygame.time.delay(1000)
     resultado = client.receber_resultado_jogada()
     if resultado is not None:
