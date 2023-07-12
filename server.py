@@ -190,7 +190,7 @@ def main():
             jogadores_conectados[oponente_vez].close()
         with contextlib.suppress(ConnectionError):
             jogadores_conectados[jogador_vez].sendall(str.encode(disconnected_message + "\0"))
-            jogadores_conectados[oponente_vez].close()
+            jogadores_conectados[jogador_vez].close()
 
     s.close()
 
