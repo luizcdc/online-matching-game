@@ -18,6 +18,7 @@ class ServerBoard:
         self.embaralhar_cartas()
 
     def embaralhar_cartas(self):
+        """Distribui os números entre as cartas"""
         options = list(range(1, constants.NUM_LINHAS**2 // 2 + 1))
         options += options
         shuffle(options)
@@ -26,6 +27,7 @@ class ServerBoard:
                 self.cards[i][j].numero = options.pop()
 
     def check(self, escolhas: list["ServerCard"]):
+        """Verifica se as duas cartas escolhidas são iguais"""
         if escolhas[0].numero == escolhas[1].numero and escolhas[0] not in self.acertos:
             for i in range(constants.NUM_LINHAS):
                 for j in range(constants.NUM_LINHAS):
@@ -36,10 +38,12 @@ class ServerBoard:
         return False
 
     def get_card_by_pos(self, i, j):
+        """Retorna a carta na posição (i, j)"""
         return self.cards[i][j] if self.coord_is_valida((i, j)) else None
 
     @staticmethod
     def coord_is_valida(coord):
+        """Retorna se a coordenada está entre (0,0) e (NUM_LINHAS-1, NUM_LINHAS-1)"""
         return 0 <= coord[0] < constants.NUM_LINHAS and 0 <= coord[1] < constants.NUM_LINHAS
 
 
@@ -80,10 +84,10 @@ class Card:
             self.draw_numero(janela)
         else:
             pygame.draw.rect(janela, constants.PRETO, self.rect, 2, border_radius=10)
-            # self.draw_numero(janela, constants.CINZA) # DEBUG
+            self.draw_numero(janela, constants.CINZA, numero_alt="Ω") # DEBUG
 
-    def draw_numero(self, janela, color: tuple = constants.PRETO):
-        numero_imprimir = fonte_numeros.render(str(self.numero), True, color)
+    def draw_numero(self, janela, color: tuple = constants.PRETO, numero_alt: str = ""):
+        numero_imprimir = fonte_numeros.render(numero_alt or str(self.numero), True, color)
         janela.blit(
             numero_imprimir,
             (
@@ -108,11 +112,13 @@ class Board:
         self.posicao = position
 
     def draw(self, janela, escolhas):
+        """Desenha todas as cartas do tabuleiro"""
         for i in range(constants.NUM_LINHAS):
             for j in range(constants.NUM_LINHAS):
                 self.cards[i][j].draw(janela, self.cards[i][j] in escolhas)
 
     def click(self, mouse_pos, janela):
+        """Verifica em que carta o mouse clicou"""
         for i in range(constants.NUM_LINHAS):
             for j in range(constants.NUM_LINHAS):
                 if self.cards[i][j].rect.collidepoint(mouse_pos):
@@ -121,6 +127,7 @@ class Board:
         return None
 
     def check(self, escolhas):
+        """Verifica se as cartas escolhidas são iguais"""
         if escolhas[0].numero == escolhas[1].numero and escolhas[0] not in self.acertos:
             for i in range(constants.NUM_LINHAS):
                 for j in range(constants.NUM_LINHAS):
