@@ -17,6 +17,7 @@ class Client:
         self.fim_de_jogo = False  # o jogo ainda não acabou.
 
     def conectar_com_servidor(self):
+        """Estabelece a conexão com o servidor."""
         try:
             self.conexao.connect((self.server_ip, self.server_port))
         except socket.error as e:
@@ -24,7 +25,7 @@ class Client:
             raise e
 
     def thread_cliente(self):
-        """Thread que recebe e envia mensagens para o servidor."""
+        """Thread que continuamente recebe e envia mensagens para o servidor."""
         while not self.fim_de_jogo:
             with contextlib.suppress(socket.timeout):
                 if reply := self.conexao.recv(2048).decode("utf-8"):
@@ -86,6 +87,7 @@ class Client:
         self._enviar_escolha("segunda", coord_x, coord_y)
 
     def _enviar_escolha(self, num_escolha: str, coord_x: int, coord_y: int):
+        """Envia a carta escolhida para o servidor"""
         self.fila_enviar.put(
             {
                 "tipo": f"{num_escolha}_escolha",
@@ -107,6 +109,7 @@ class Client:
         return None
 
     def receber_resultado_jogada(self):
+        """Recebe o resultado da jogada"""
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "resultado_jogada":
@@ -119,6 +122,7 @@ class Client:
         return None
 
     def receber_escolha_1_oponente(self):
+        """Recebe a primeira escolha do oponente"""
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "primeira_escolha_oponente":
@@ -131,6 +135,7 @@ class Client:
         return None
 
     def receber_escolha_2_oponente(self):
+        """Recebe a segunda escolha do oponente"""
         try:
             reply = self.fila_recebidos.get_nowait()
             if reply and reply["tipo"] == "segunda_escolha_oponente":
@@ -143,6 +148,7 @@ class Client:
         return None
 
     def _requeue_caso_fim_do_jogo_else_raise(self, reply: dict | None):
+        """Caso o jogo tenha acabado, reenfileira a mensagem de fim de jogo para que outro método a processe."""
         if reply is not None:
             if reply["tipo"] not in ["fim_do_jogo", "oponente_desistiu"]:
                 raise ValueError(f"Reply inesperado: {reply['tipo']}")
