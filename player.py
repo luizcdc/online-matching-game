@@ -194,7 +194,6 @@ def main():
                 game.pontuacao[1] = max(0, game.pontuacao[1])
                 desenhar_janela(janela, message, game)
                 pygame.display.update()
-                pygame.time.delay(5000)
                 rodando = False
                 break
             except queue.Empty:
