@@ -28,7 +28,11 @@ class Client:
         while not self.fim_de_jogo:
             with contextlib.suppress(socket.timeout):
                 if reply := self.conexao.recv(2048).decode("utf-8"):
-                    enqueued_messages = [json.loads(msg) for msg in reply.split("\0") if msg]
+                    enqueued_messages = [
+                        json.loads(msg)
+                        for msg in reply.split("\0")
+                        if msg
+                    ]
                     for msg in enqueued_messages:
                         self.fila_recebidos.put(msg)
                         if msg["tipo"] in ["fim_do_jogo", "oponente_desistiu"]:

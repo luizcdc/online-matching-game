@@ -208,11 +208,11 @@ def main():
                     pygame.quit()
                     exit(0)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    escolha_temp = processar_click_mouse(client, janela, game, escolha_temp, event)
+                    escolha_temp = processar_click(client, janela, game, escolha_temp, event)
             if game.state == GameState.VERIFICANDO_1:
-                escolha_temp, message = verifica_primeira_escolha_valida(client, game, escolha_temp, message)
+                escolha_temp, message = verifica_escolha_1_valida(client, game, escolha_temp, message)
             elif game.state == GameState.VERIFICANDO_2:
-                escolha_temp, message = verifica_segunda_escolha_valida(client, game, escolha_temp, message)
+                escolha_temp, message = verifica_escolha_2_valida(client, game, escolha_temp, message)
             elif game.state == GameState.AGUARDANDO_MEU_RESULTADO:
                 message = processar_resultado_rodada(client, game, message)
 
@@ -243,7 +243,7 @@ def main():
                 pygame.quit()
 
 
-def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Card, message: str):
+def verifica_escolha_2_valida(client: Client, game: Game, escolha_temp: Card, message: str):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -257,7 +257,7 @@ def verifica_segunda_escolha_valida(client: Client, game: Game, escolha_temp: Ca
     return escolha_temp, message
 
 
-def verifica_primeira_escolha_valida(client: Client, game: Game, escolha_temp: Card, message: str):
+def verifica_escolha_1_valida(client: Client, game: Game, escolha_temp: Card, message: str):
     confirmacao = client.confirma_carta_valida()
     if confirmacao is not None:
         if confirmacao["valida"]:
@@ -271,7 +271,7 @@ def verifica_primeira_escolha_valida(client: Client, game: Game, escolha_temp: C
     return escolha_temp, message
 
 
-def processar_click_mouse(
+def processar_click(
     client: Client,
     janela: pygame.display,
     game: Game,
